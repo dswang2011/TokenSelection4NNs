@@ -1,0 +1,17 @@
+*.bak
+__pycache__/*
+*.pyc
+models/__pycache__/*
+*.text
+*.txt
+case study/*
+*.cases
+*.csv
+*.pkl
+.spyproject/*
+*.h5
+config/*
+*.ini
+input/*
+
+
