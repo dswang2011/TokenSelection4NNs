@@ -61,6 +61,15 @@ def get_depth(node):
 	# print(node.data,'depth:',node.depth)
 	return temp_max+1
 
+
+# random select 
+def random_select(sentence,select_ratio=1.0):
+	word_list = nlp.word_tokenize(sentence)
+	selected_count = int(len(word_list)*select_ratio)
+	selected_index = np.random.choice(len(word_list),selected_count,replace=False)
+	return np.array(word_list)[selected_index].tolist()
+
+
 # cut mean cutting lower layers, 0 means no cutting, 1 means cut one leaf layer, etc.
 def get_token_dependency(sentence,cut=0):
 	tuple_list = nlp.dependency_parse(sentence)
@@ -108,9 +117,11 @@ def get_token_dependency(sentence,cut=0):
 	print([word_list[node.data-1] for node in sorted_nodes])
 	return [word_list[node.data-1] for node in sorted_nodes]
 
-# test
+###### test #####
+# dependency tree cutting
 res_toknes = get_token_dependency(sentence,4)
-print('---')
+# random selection
+print(random_select(sentence,select_ratio=0.2))
 
 
 nlp.close() # Do not forget to close! The backend server will consume a lot memery.
