@@ -15,6 +15,7 @@ nlp = None
 punctuation_list = [',',':',';','.','!','?','...','…','。']
 # punctuation_list = ['.']
 
+
 def get_embedding_dict(GLOVE_DIR):
 	embeddings_index = {}
 	f = codecs.open(os.path.join(GLOVE_DIR, 'glove.6B.100d.txt'),encoding="utf-8")
@@ -50,33 +51,20 @@ def clean_str(string):
     return string.strip().lower()
 
 
-def tokenizer(gene_texts,MAX_NB_WORDS):
-	word_index = {}
-	docs = []
-	txt_count = 0
+def tokenizer(tokens_list,MAX_NB_WORDS):
 	index = 1
-	if nlp is None:
-		nlp=stanfordnlp.Pipeline(use_gpu=False)
-	for text in gene_texts:
-		txt_count+=1
-		if txt_count%100==0:
-			print('[tokenized txt]:',txt_count)
-		doc = nlp(text)
-		docs.append(doc)
-		txt_matrix = NLP.get_text_matrix(doc)	# doc matrix (array)
-		# == process this text matrix
-		for i in range(len(txt_matrix)):
-			sent_arr = txt_matrix[i]
-			for j in range(len(sent_arr)):
-				token = sent_arr[j].lower()
-				# add to word_index
-				if len(word_index)<MAX_NB_WORDS:
-					if token in word_index.keys():
-						continue
-					else:
-						word_index[token] = index
-						index+=1
-	return word_index,docs
+	word_index = {}
+	for tokens in tokens_list:
+		for token in tokens:
+			# add to word_index
+			if len(word_index)<MAX_NB_WORDS:
+				token=token.lower()
+				if token in word_index.keys():
+					continue
+				else:
+					word_index[token] = index
+					index+=1
+	return word_index
 
 # input is the generalized text; 
 def text_to_sequences(gene_texts,word_index, MAX_SEQUENCE_LENGTH):
@@ -125,40 +113,15 @@ def text_to_sequences(gene_texts,word_index, MAX_SEQUENCE_LENGTH):
 
 
 # input is the generalized text; 
-def docs_to_sequences(docs,word_index, MAX_SEQUENCE_LENGTH):
+def tokens_list_to_sequences(tokens_lists,word_index, MAX_SEQUENCE_LENGTH):
 	sequences = []
-	for doc in docs:
-		txt_matrix = NLP.get_text_matrix(doc)	# doc matrix (array)
-		# txt_matrix = np.asarray(txt_matrix)
-		mention_pred = NLP.get_mention_predicate(doc)	# local
-		global_pred = NLP.get_global_predicate(doc)	# global
+	for tokens in tokens_lists:
 		sequence = []
-		
-		# == process this text matrix
-		for i in range(len(txt_matrix)):
-			sent_arr = txt_matrix[i]
-			for j in range(len(sent_arr)):
-				token = sent_arr[j].lower()
-				token_index = 0	
-				if token in word_index.keys():
-					token_index = word_index[token]
-				# local encoding
-				local_encoding = 0 
-				if token in ['aaac','bbbc','pppc','pppcs']:
-					pred_pos = mention_pred[token]['predicate']
-					pred_token = txt_matrix[pred_pos[0]][pred_pos[1]]
-					if pred_token in word_index.keys():
-						local_encoding = word_index[pred_token]
-				# global encoding
-				global_encoding = 0
-				if token in punctuation_list:
-					global_encoding = token_index
-				else:
-					if global_pred[i]['head']==j:
-						global_encoding = token_index
-				# concatenate
-				concate = [token_index,local_encoding,global_encoding]
-				sequence+=concate # add to the list
+		for token in tokens:
+			token = token.lower()
+			if token in word_index.keys():
+				token_index = word_index[token]
+				sequence.append(token_index)
 		if len(sequence)>MAX_SEQUENCE_LENGTH:
 			sequence = sequence[:MAX_SEQUENCE_LENGTH]
 		else:
@@ -311,3 +274,20 @@ def load_data(tsv_file_path,mode= "train"):
             samp_id = data.get_id()
             res.append([orig_txt,exact_txt,samp_id])
     return np.array(res)
+
+import csv
+def load_classification_data(file_path,hasHead=0):
+	texts=[]
+	labels=[]
+	with open(file_path, encoding='utf8') as f:
+		csv_reader = csv.reader(f, delimiter='\t')
+		for row in csv_reader:
+			texts.append(row[0].strip())
+			label = '0'
+			for i in range(1,len(row)):
+				if row[i].strip() in ['0','1']:
+					label = row[i].strip()
+			labels.append(label)
+	# print('labels:',labels)
+	return [texts,labels]
+

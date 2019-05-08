@@ -8,6 +8,7 @@ from Data import DatasetSchema
 import os
 
 
+
 class Process(object):
     def __init__(self,opt,train_data_file = 'input/dataset/gap-development.tsv',valid_data_file = 'input/dataset/gap-validation.tsv',test_data_file="input/dataset/gap-test.tsv"):
         self.train_data_file = train_data_file
@@ -83,32 +84,6 @@ class Process(object):
        
         return x_val,test_ids
 
-    def get_processed_dataset(self,mode="train"):
-        if not os.path.exists("temp"):
-            os.mkdir("temp")
-        dataset_pkl = "temp/"+self.conf.dataset +"_"+self.conf.split_data+".pkl"
-        if os.path.exists(dataset_pkl):
-            return pickle.load(open(dataset_pkl, 'rb'))
-        if mode == "train":
-            filename = os.path.join(self.opt.dataset_dir,"gap-development.tsv")   # waby : gap-development.tsv + gap-test.tsv
-            dataset = data_reader.load_data(filename,mode="train")
-        elif mode == "dev":
-            filename = os.path.join(self.opt.dataset_dir,"gap-validation.tsv")
-            dataset = data_reader.load_data(filename,mode="train")
-        else:
-            filename = os.path.join(self.opt.dataset_dir,"test_stage_2.tsv")
-            dataset = data_reader.load_data(filename,mode="test")
-            # validation data
-            
-        # waby : this may not be the right way to rerurn the processed train dataset
-        
-        test_gene_texts = dataset[:,1]
-        ids = dataset[:,2]
-        # sequentializing validation data        
-        word_index,test_docs = data_reader.tokenizer(test_gene_texts,20000)        
-        pickle.dump([ids,test_docs],open('test2_id2doc.pkl', 'wb'))
-        return [ids,test_docs]
-        
-    
 
+    
 

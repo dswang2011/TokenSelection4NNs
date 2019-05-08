@@ -13,5 +13,6 @@ case study/*
 config/*
 *.ini
 input/*
+prepared/*
 
 

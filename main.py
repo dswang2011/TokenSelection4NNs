@@ -8,6 +8,7 @@ from keras.models import load_model
 import os
 import numpy as np
 import itertools
+from token_selection import TokenSelection
 
 params = Params()
 parser = argparse.ArgumentParser(description='Running Gap.')
@@ -61,7 +62,7 @@ def train_model():
         "hidden_unit_num":[50,100],
         "dropout_rate" : [0.3],#,0.5,0.75,0.8,1]    ,
         "model": ["lstm_2L", "bilstm"],
-        "contatenate":[0,1],
+        # "contatenate":[0],
         "lr":[0.001,0.01],
         "batch_size":[32,64],
         # "validation_split":[0.05,0.1,0.15,0.2],
@@ -88,23 +89,13 @@ def train_model():
     #     "batch_size":[32],
     #     "validation_split":[0.1],
     # }
-    process = Process(params)
-    train_uncontatenated = process.get_train()
+    token_select = TokenSelection(params)
+    train = token_select.get_train(dataset="IMDB",file_name="train.csv",stragety="stopword",POS_category="Noun")
 #    val_uncontatenated = process.get_test()
-    train_contatenated = process.get_train(contatenate =1)
-#    val_contatenated = process.get_test(contatenate =1)
     parameters= [arg for index,arg in enumerate(itertools.product(*grid_parameters.values())) if index%args.gpu_num==args.gpu]
     for parameter in parameters:
         print(parameter)
-
-        
-        params.setup(zip(grid_parameters.keys(),parameter))
-        if params.contatenate==1:
-        	print('[concate==1]')
-        	train = train_contatenated
-        else:
-        	print('[concate==0]')
-        	train = train_uncontatenated           
+        params.setup(zip(grid_parameters.keys(),parameter))        
         model = models.setup(params)
         model.train(train)
         
@@ -152,8 +143,8 @@ def output_submit(output_path):
 if __name__ == '__main__':
    
 #    test_model()
-    # train_model()
+    train_model()
     # test_model()
-    output_submit('output_ds.txt')
+    # output_submit('output_ds.txt')
 
     

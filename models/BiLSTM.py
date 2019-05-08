@@ -36,7 +36,7 @@ class BiLSTM(RNNBasic):
         # model.add(Flatten())
         
 #        text_branch.add(Dense(100, activation='relu'))
-        text_branch.add(Dense(3, activation='softmax'))       
+        text_branch.add(Dense(2, activation='softmax'))       
                 
         return text_branch
 
