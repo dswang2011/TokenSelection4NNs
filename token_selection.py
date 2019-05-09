@@ -167,7 +167,7 @@ if __name__ == '__main__':
     params.parse_config(args.config)
 
     token_select = TokenSelection(params)
-    nlp = StanfordCoreNLP(r'D:\dataset\stanford-corenlp-full-2018-10-05')
+    nlp = StanfordCoreNLP(params.corenlp_root)
     token_select.token_selection_preparation(nlp = nlp, dataset="IMDB",file_name="train.csv")
     token_select.token_selection_preparation(nlp = nlp, dataset="IMDB",file_name="test.csv")
     nlp.close() # Do not forget to close! The backend server will consume a lot memery.
