@@ -154,12 +154,14 @@ def get_token_dependency(nlp,text,cut=0):
 			continue
 		if len(sent)>500:
 			sent = sent[:450]
+		sent = sent+'.'
 		# build tree
-		layer2node_list = build_tree(nlp,sent+'.')
+		layer2node_list = build_tree(nlp,sent)
 		# cut tree
 		sent_tokens = tree_cut(layer2node_list,nlp,sent,cut)
 		text_tokens+=sent_tokens
-		text_tokens+=['.']
+		if '.' not in text_tokens:
+			text_tokens+=['.']
 	return text_tokens
 # text2tokens dependency
 def text2tokens_dependency(nlp,text_list,cut=1):
@@ -174,17 +176,21 @@ def get_token_treecuts(nlp,text,cuts=[1,2,3,4,5]):
 	text_tokens={}
 	sentences = re.split('[.|?|!]',text)
 	for sent in sentences:
-		if sent.strip()=='':
+		if len(sent.strip())<3:
 			continue
+		if len(sent)>500:
+			sent=sent[:450]
+		sent = sent+'.'
 		# build tree
-		layer2node_list = build_tree(nlp,sent+'.')
+		layer2node_list = build_tree(nlp,sent)
 		# cut tree
 		for cut in cuts:
 			if cut not in text_tokens.keys():
 				text_tokens[cut]=[]
 			sent_tokens = tree_cut(layer2node_list,nlp,sent,cut)
 			text_tokens[cut]+=sent_tokens
-			text_tokens[cut]+=['.']
+			if '.' not in text_tokens[cut]:
+				text_tokens[cut]+=['.']
 	return text_tokens
 # text2tokens dependency
 def text2tokens_treecuts(nlp,text_list,cuts=[1,2,3,4,5]):
