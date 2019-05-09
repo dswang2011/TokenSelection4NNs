@@ -140,11 +140,16 @@ class TokenSelection(object):
         else:
             print("Already exist:",pos_pkl)
             # print('each with shape:',np.array(Noun).shape)
-        # dependency
-        for cut in [1,2,3,4,5,6,7,8]:
+
+        # dependency tree different cuts
+        cuts = [1,2,3,4,5]
+        tokens_dict_list = CoreNLP.text2tokens_treecuts(nlp,texts,cuts)
+        for cut in cuts:
             dependency_pkl = output_root+file_name+"_treecut"+str(cut)+".pkl"
             if not os.path.exists(dependency_pkl):
-                tokens_list = CoreNLP.text2tokens_dependency(nlp,texts,cut)
+                tokens_list=[]
+                for tokens_dict in tokens_dict_list:
+                    tokens_list.append(tokens_dict[cut]) 
                 pickle.dump([tokens_list,labels],open(dependency_pkl, 'wb'))
                 print('output succees:',dependency_pkl)
                 print('shape:',tokens_list.shape)

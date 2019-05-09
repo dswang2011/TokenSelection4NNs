@@ -3,7 +3,7 @@ from stanfordcorenlp import StanfordCoreNLP
 import numpy as np
 import nltk
 from nltk.corpus import stopwords
-
+import re
 
 
 # POS tag category
@@ -103,11 +103,8 @@ def text2tokens_stopword(nlp,text_list):
 	return np.array(tokens_list)
 
 # dependency tree based selection 
-# cut mean cutting lower layers, 0 means no cutting, 1 means cut one leaf layer, etc.
-def get_token_dependency(nlp,sentence,cut=0):
+def build_tree(nlp,sentence):
 	tuple_list = nlp.dependency_parse(sentence)
-	print(tuple_list)
-	word_list = nlp.word_tokenize(sentence)
 	# print(word_list)
 	index2Node = {}
 	# buld the tree
@@ -132,8 +129,9 @@ def get_token_dependency(nlp,sentence,cut=0):
 		if len(node_list)==0:
 			break
 		layer2node_list[layer] = node_list
+	return layer2node_list
 
-	# get the first (tree_dept-cut) layer nodes
+def tree_cut(layer2node_list,nlp,sentence,cut):
 	d_thred = len(layer2node_list)-cut
 	d_thred = np.max([d_thred,3])	# 3 means 1-2, i.e., two layers
 	selected_nodes = []
@@ -142,20 +140,54 @@ def get_token_dependency(nlp,sentence,cut=0):
 			break
 		selected_nodes += layer2node_list[layer]
 	sorted_nodes = sorted(selected_nodes, key=lambda x: x.data)
+	word_list = nlp.word_tokenize(sentence)
 	return [word_list[node.data-1] for node in sorted_nodes]
+# cut mean cutting lower layers, 0 means no cutting, 1 means cut one leaf layer, etc.
+def get_token_dependency(nlp,text,cut=0):
+	text_tokens=[]
+	sentences = text.split('.')
+	for sent in sentences:
+		if sent.strip()=='':
+			continue
+		# build tree
+		layer2node_list = build_tree(nlp,sent)
+		# cut tree
+		sent_tokens = tree_cut(layer2node_list,nlp,sent,cut)
+		text_tokens+=sent_tokens
+		text_tokens+=['.']
+	return text_tokens
+# text2tokens dependency
 def text2tokens_dependency(nlp,text_list,cut=1):
 	tokens_list = []
 	for text in text_list:
-		sentences = text.split('.')
-		text_res=[]
-		for sent in sentences:
-			if sent.strip()=='':
-				continue
-			text_res+=get_token_dependency(nlp,sent,cut)
-			text_res+=['.']
-		tokens_list.append(text_res)
+		tokens_list.append(get_token_dependency(nlp,text,cut))
 	return np.array(tokens_list)
 
+
+# cut mean cutting lower layers, 0 means no cutting, 1 means cut one leaf layer, etc.
+def get_token_treecuts(nlp,text,cuts=[1,2,3,4,5]):
+	text_tokens={}
+	sentences = text.split('.')
+	for sent in sentences:
+		if sent.strip()=='':
+			continue
+		# build tree
+		layer2node_list = build_tree(nlp,sent)
+		# cut tree
+		for cut in cuts:
+			if cut not in text_tokens.keys():
+				text_tokens[cut]=[]
+			sent_tokens = tree_cut(layer2node_list,nlp,sent,cut)
+			text_tokens[cut]+=sent_tokens
+			text_tokens[cut]+=['.']
+	return text_tokens
+# text2tokens dependency
+def text2tokens_treecuts(nlp,text_list,cuts=[1,2,3,4,5]):
+	tokens_dict_list = []
+	for text in text_list:
+		text_tokens = get_token_treecuts(nlp,text,cuts)
+		tokens_dict_list.append(text_tokens)
+	return tokens_dict_list
 
 ###### test #####
 # dependency tree cutting
@@ -163,11 +195,11 @@ def text2tokens_dependency(nlp,text_list,cut=1):
 # random selection
 # print(random_select(sentence,select_ratio=0.2))
 # stop word removed
-# print(stopword_removed(sentence))
-texts=["I am dongsheng. This is two sent.","This is test.","only"]
-nlp = StanfordCoreNLP(r'/home/dongsheng/data/resources/stanford-corenlp-full-2018-10-05')
-tokens_list = text2tokens_fulltext(nlp,texts)
-print(np.array(tokens_list).shape)
-for tokens in tokens_list:
-	print('->',tokens)
-nlp.close()
+# # print(stopword_removed(sentence))
+# texts=["I am dongsheng, and I am from China but live in denmark.","This is test."]
+# nlp = StanfordCoreNLP(r'/home/dongsheng/data/resources/stanford-corenlp-full-2018-10-05')
+# tokens_list = text2tokens_treecut5(nlp,texts,cuts=[1,2,3])
+# print(np.array(tokens_list).shape)
+# for tokens in tokens_list:
+# 	print('->',tokens)
+# nlp.close()
