@@ -42,7 +42,7 @@ def text2token_POS(nlp,text_list):
 # full text
 def text2tokens_fulltext(nlp,text_list):
 	tokens_list = []
-	for text in tokens_list:
+	for text in text_list:
 		tokens_list.append(nlp.word_tokenize(text))
 	return np.array(tokens_list)
 
@@ -164,10 +164,10 @@ def text2tokens_dependency(nlp,text_list,cut=1):
 # print(random_select(sentence,select_ratio=0.2))
 # stop word removed
 # print(stopword_removed(sentence))
-# texts=["I am dongsheng. This is two sent.","This is test.","only"]
-# nlp = StanfordCoreNLP(r'/home/dongsheng/data/resources/stanford-corenlp-full-2018-10-05')
-# tokens_list = text2tokens_dependency(nlp,texts,cut=1)
-# print(np.array(tokens_list).shape)
-# for tokens in tokens_list:
-# 	print('->',tokens)
-# nlp.close()
+texts=["I am dongsheng. This is two sent.","This is test.","only"]
+nlp = StanfordCoreNLP(r'/home/dongsheng/data/resources/stanford-corenlp-full-2018-10-05')
+tokens_list = text2tokens_fulltext(nlp,texts)
+print(np.array(tokens_list).shape)
+for tokens in tokens_list:
+	print('->',tokens)
+nlp.close()
