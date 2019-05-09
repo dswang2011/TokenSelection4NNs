@@ -42,7 +42,7 @@ def text2token_POS(nlp,text_list):
 # full text
 def text2tokens_fulltext(nlp,text_list):
 	tokens_list = []
-	for text in test_list:
+	for text in tokens_list:
 		tokens_list.append(nlp.word_tokenize(text))
 	return np.array(tokens_list)
 
@@ -106,7 +106,7 @@ def text2tokens_stopword(nlp,text_list):
 # cut mean cutting lower layers, 0 means no cutting, 1 means cut one leaf layer, etc.
 def get_token_dependency(nlp,sentence,cut=0):
 	tuple_list = nlp.dependency_parse(sentence)
-	# print(tuple_list)
+	print(tuple_list)
 	word_list = nlp.word_tokenize(sentence)
 	# print(word_list)
 	index2Node = {}
@@ -122,9 +122,7 @@ def get_token_dependency(nlp,sentence,cut=0):
 		curr_node = index2Node[index]
 		point_node.add(curr_node)
 	# layer to nodes
-	queue = []
 	layer2node_list = {}
-	queue.append(index2Node[0])
 	layer2node_list[0] = [index2Node[0]]
 	for layer in range(1,10):
 		previous_node_list = layer2node_list[layer-1]
@@ -138,19 +136,24 @@ def get_token_dependency(nlp,sentence,cut=0):
 	# get the first (tree_dept-cut) layer nodes
 	d_thred = len(layer2node_list)-cut
 	d_thred = np.max([d_thred,3])	# 3 means 1-2, i.e., two layers
-	print('d_thred',d_thred)
 	selected_nodes = []
 	for layer in range(1,d_thred):
 		if layer>len(layer2node_list)-1:
 			break
 		selected_nodes += layer2node_list[layer]
 	sorted_nodes = sorted(selected_nodes, key=lambda x: x.data)
-	print([word_list[node.data-1] for node in sorted_nodes])
 	return [word_list[node.data-1] for node in sorted_nodes]
 def text2tokens_dependency(nlp,text_list,cut=1):
 	tokens_list = []
 	for text in text_list:
-		tokens_list.append(get_token_dependency(nlp,text,cut))
+		sentences = text.split('.')
+		text_res=[]
+		for sent in sentences:
+			if sent.strip()=='':
+				continue
+			text_res+=get_token_dependency(nlp,sent,cut)
+			text_res+=['.']
+		tokens_list.append(text_res)
 	return np.array(tokens_list)
 
 
@@ -161,9 +164,9 @@ def text2tokens_dependency(nlp,text_list,cut=1):
 # print(random_select(sentence,select_ratio=0.2))
 # stop word removed
 # print(stopword_removed(sentence))
-# texts=["I am dongsheng.","This is test.","there are only."]
+# texts=["I am dongsheng. This is two sent.","This is test.","only"]
 # nlp = StanfordCoreNLP(r'/home/dongsheng/data/resources/stanford-corenlp-full-2018-10-05')
-# tokens_list = text2tokens_random(nlp,texts,0.8)
+# tokens_list = text2tokens_dependency(nlp,texts,cut=1)
 # print(np.array(tokens_list).shape)
 # for tokens in tokens_list:
 # 	print('->',tokens)

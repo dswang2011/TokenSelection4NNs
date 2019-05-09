@@ -68,9 +68,9 @@ class TokenSelection(object):
         output_root = "prepared/"+dataset+"/"
         if strategy == "fulltext":
         	fulltext_pkl = output_root+file_name+"_fulltext.pkl"
-            temp = pickle.load(open(fulltext_pkl,'rb'))
-            token_lists,labels = temp[0],temp[1]
-            return token_lists,labels
+        	temp = pickle.load(open(fulltext_pkl,'rb'))
+        	token_lists,labels = temp[0],temp[1]
+        	return token_lists,labels
         elif stragety == "stopword":
             stopword_pkl = output_root+file_name+"_stopword.pkl"
             temp = pickle.load(open(stopword_pkl,'rb'))
