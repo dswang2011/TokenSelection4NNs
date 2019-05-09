@@ -66,7 +66,7 @@ class TokenSelection(object):
     # stragety = fulltext, stopword, random, POS, dependency;
     def get_selected_token(self,dataset,file_name,stragety="random",selected_ratio=0.9,cut=1):
         output_root = "prepared/"+dataset+"/"
-        if strategy == "fulltext":
+        if stragety == "fulltext":
         	fulltext_pkl = output_root+file_name+"_fulltext.pkl"
         	temp = pickle.load(open(fulltext_pkl,'rb'))
         	token_lists,labels = temp[0],temp[1]
@@ -167,7 +167,8 @@ if __name__ == '__main__':
     params.parse_config(args.config)
 
     token_select = TokenSelection(params)
-    nlp = StanfordCoreNLP(r'/home/dongsheng/data/resources/stanford-corenlp-full-2018-10-05')
+    nlp = StanfordCoreNLP(r'D:\dataset\stanford-corenlp-full-2018-10-05')
     token_select.token_selection_preparation(nlp = nlp, dataset="IMDB",file_name="train.csv")
+    token_select.token_selection_preparation(nlp = nlp, dataset="IMDB",file_name="test.csv")
     nlp.close() # Do not forget to close! The backend server will consume a lot memery.
 
