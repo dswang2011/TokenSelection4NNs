@@ -18,9 +18,9 @@ FIRST: Prepare the data (pre-output the token selection files).
 Python File: "token_selection.py".
 1. Add your data as follows: prepared/your_dataset_name/your_file_name => e.g. prepared/IMBD/train.csv   prepared/IMBD/test.csv
 2. Change the parameter in __main__ part, e.g., part of the code is shown below:
-
+-------------------------------------------------------
 	nlp = StanfordCoreNLP(params.corenlp_root)
-	# below is where you can set your dataset and file_name
+	## below is where you can set your dataset and file_name
 	token_select.token_selection_preparation(nlp = nlp, dataset="IMDB",file_name="train.csv")
 	token_select.token_selection_preparation(nlp = nlp, dataset="IMDB",file_name="test.csv")
 	nlp.close() # Do not forget to close! The backend server will consume a lot memery.
