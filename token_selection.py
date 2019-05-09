@@ -142,7 +142,7 @@ class TokenSelection(object):
             # print('each with shape:',np.array(Noun).shape)
 
         # dependency tree different cuts
-        cuts = [1,2,3,4,5]
+        cuts = [1,2]
         tokens_dict_list = CoreNLP.text2tokens_treecuts(nlp,texts,cuts)
         for cut in cuts:
             dependency_pkl = output_root+file_name+"_treecut"+str(cut)+".pkl"

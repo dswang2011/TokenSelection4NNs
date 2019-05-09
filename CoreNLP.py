@@ -121,14 +121,17 @@ def build_tree(nlp,sentence):
 	# layer to nodes
 	layer2node_list = {}
 	layer2node_list[0] = [index2Node[0]]
-	for layer in range(1,10):
-		previous_node_list = layer2node_list[layer-1]
-		node_list = []
-		for node in previous_node_list:
-			node_list += node.children
-		if len(node_list)==0:
-			break
-		layer2node_list[layer] = node_list
+	try:
+		for layer in range(1,10):
+			previous_node_list = layer2node_list[layer-1]
+			node_list = []
+			for node in previous_node_list:
+				node_list += node.children
+			if len(node_list)==0:
+				break
+			layer2node_list[layer] = node_list
+	except:
+		print(sentence,':',tuple_list)
 	return layer2node_list
 
 def tree_cut(layer2node_list,nlp,sentence,cut):
@@ -145,12 +148,14 @@ def tree_cut(layer2node_list,nlp,sentence,cut):
 # cut mean cutting lower layers, 0 means no cutting, 1 means cut one leaf layer, etc.
 def get_token_dependency(nlp,text,cut=0):
 	text_tokens=[]
-	sentences = text.split('.')
+	sentences = re.split('[.!?]',text)
 	for sent in sentences:
-		if sent.strip()=='':
+		if len(sent.strip())<3:
 			continue
+		if len(sent)>500:
+			sent = sent[:450]
 		# build tree
-		layer2node_list = build_tree(nlp,sent)
+		layer2node_list = build_tree(nlp,sent+'.')
 		# cut tree
 		sent_tokens = tree_cut(layer2node_list,nlp,sent,cut)
 		text_tokens+=sent_tokens
@@ -167,12 +172,12 @@ def text2tokens_dependency(nlp,text_list,cut=1):
 # cut mean cutting lower layers, 0 means no cutting, 1 means cut one leaf layer, etc.
 def get_token_treecuts(nlp,text,cuts=[1,2,3,4,5]):
 	text_tokens={}
-	sentences = text.split('.')
+	sentences = re.split('[.|?|!]',text)
 	for sent in sentences:
 		if sent.strip()=='':
 			continue
 		# build tree
-		layer2node_list = build_tree(nlp,sent)
+		layer2node_list = build_tree(nlp,sent+'.')
 		# cut tree
 		for cut in cuts:
 			if cut not in text_tokens.keys():
