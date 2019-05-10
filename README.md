@@ -13,7 +13,7 @@ after that, put the path in configuration file (refer to configuration section)
 
 
 ### running steps ###
-#FIRST: Prepare the data (pre-output the token selection files).
+##FIRST: Prepare the data (pre-output the token selection files).
 Python File: "token_selection.py".
 1. Add your data into path as follows: prepared/your_dataset_name/your_file_name => e.g. prepared/IMBD/train.csv ; prepared/IMBD/test.csv ; etc..
 2. Change the parameter in __main__ part, e.g., part of the code is shown below:
@@ -24,7 +24,7 @@ Python File: "token_selection.py".
 	token_select.token_selection_preparation(nlp = nlp, dataset="IMDB",file_name="test.csv")
 	nlp.close() # Do not forget to close! The backend server will consume a lot memery.
 
-#SECOND: run the neural model.
+##SECOND: run the neural model.
 Python File: "main.py".
 1. you need to change the parameters in the function of train_model(), especially for the line below:
 -----------------------------
