@@ -28,7 +28,8 @@ Do we really need all tokens? Rethinking token selection in neuralnetwork for NL
 	# strategy can be: fulltext, stopword, random, POS, dependency, 
 	train = token_select.get_train(dataset="IMDB",file_name="train.csv",stragety="stopword",POS_category="Noun")
 
-where you need to specify the data and file, and strategy, and then you can run your code. Note if you did not set stragety="POS", the POS_category won't be used.
+* where you need to specify the dataset and file_name, and strategy, and then you can run your code. Note that if you did not set stragety="POS", the POS_category won't be used. 
+* If you set strategy="POS", POS_category can be: "Noun", "Verb", "Adjective", "Noun_Verb", "Noun_Adjective", "Verb_Adjective", "Noun_Verb_Adjective". 
 
 
 ## configuration
