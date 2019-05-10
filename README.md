@@ -66,4 +66,4 @@ Our config.ini looks like below:
 	GLOVE_DIR = /home/dongsheng/data/resources/glove
 	dataset_dir = input/dataset
 	model= bilstm2
->>>>>>> 4981f12835359a40e7b6c0997a7587aa620bca6d
+
