@@ -3,18 +3,17 @@ Do we really need all tokens? Rethinking token selection in neuralnetwork for NL
 
 
 ## Dependent environment
-Python3.0, 
-pip install stanfordcorenlp, keras, numpy, pickle, etc.
-
-you need to download stanford CoreNLP, You can find in: https://stanfordnlp.github.io/CoreNLP/download.html
-the version we used is: "stanford-corenlp-full-2018-10-05", put the file path in configuration file (refer to configuration section)
+* Python3.0+
+* pip install stanfordcorenlp, keras, numpy, pickle, argparse, nltk, etc.
+* you need to download english "stopword" for nltk if you did not. 
+* you need to download stanford CoreNLP, You can find in: https://stanfordnlp.github.io/CoreNLP/download.html the version we used is: "stanford-corenlp-full-2018-10-05", put the file path in configuration file (refer to configuration section).
 
 
 ## running steps
-### **FIRST**: Prepare the data (generate the token selection files).
-Python File: "token_selection.py".
-1. Add your data into path as follows: prepared/your_dataset_name/your_file_name => e.g. prepared/IMBD/train.csv ; prepared/IMBD/test.csv ; etc..
-2. Change the parameter in __main__ , part of the code is shown below:
+**Step1:**: Prepare the data (generate the token selection files).
+* Python File: "token_selection.py".
+* Add your data into path as follows: prepared/your_dataset_name/your_file_name => e.g. prepared/IMBD/train.csv ; prepared/IMBD/test.csv ; etc..
+* Change the parameter in __main__ , part of the code is shown below:
 -------------------------------------------------------
 	nlp = StanfordCoreNLP(params.corenlp_root)
 	## below is where you can set your dataset and file_name
@@ -22,9 +21,9 @@ Python File: "token_selection.py".
 	token_select.token_selection_preparation(nlp = nlp, dataset="IMDB",file_name="test.csv")
 	nlp.close() # Do not forget to close! The backend server will consume a lot memery.
 
-### **SECOND**: run the neural model.
-Python File: "main.py".
-1. you need to change the parameters in the function of train_model(), especially for the line below:
+**Step2:**: run the neural model.
+* Python File: "main.py".
+* you need to change the parameters in the function of train_model(), especially for the line below:
 -----------------------------
 	# strategy can be: fulltext, stopword, random, POS, dependency, 
 	train = token_select.get_train(dataset="IMDB",file_name="train.csv",stragety="stopword",POS_category="Noun")
@@ -33,9 +32,9 @@ where you need to specify the data and file, and strategy, and then you can run 
 
 
 ## configuration
-Configuration File:"config/config.ini"
-1. Basically, you just need to put the standford CoreNLP file path for "corenlp_root"; 
-2. And Glove embedding files for "GLOVE_DIR"
+* Configuration File:"config/config.ini"
+* Basically, you just need to put the standford CoreNLP file path for "corenlp_root"; 
+* And Glove embedding files for "GLOVE_DIR"
 
 Our config.ini looks like below:
 
