@@ -173,7 +173,7 @@ def text2tokens_dependency(nlp,text_list,cut=1):
 
 
 # cut mean cutting lower layers, 0 means no cutting, 1 means cut one leaf layer, etc.
-def get_token_treecuts(nlp,text,cuts=[1,2,3,4,5]):
+def get_token_treecuts(nlp,text,cuts=[1,2,3]):
 	text_tokens={}
 	sentences = re.split('[.|?|!]',text)
 	for sent in sentences:
@@ -194,11 +194,17 @@ def get_token_treecuts(nlp,text,cuts=[1,2,3,4,5]):
 			text_tokens[cut]+=sent_tokens
 	return text_tokens
 # text2tokens dependency
-def text2tokens_treecuts(nlp,text_list,cuts=[1,2,3,4,5]):
+def text2tokens_treecuts(nlp,text_list,cuts=[1,2,3]):
 	tokens_dict_list = []
+	i=0
+	print('text_list_size:',len(text_list))
+	print('tree build & cut takes time, we will print the process below:')
 	for text in text_list:
 		text_tokens = get_token_treecuts(nlp,text,cuts)
 		tokens_dict_list.append(text_tokens)
+		i+=1
+		if i%100==0:
+			print('processed:',i,'/',len(text_list))
 	return tokens_dict_list
 
 ###### test #####
