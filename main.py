@@ -20,7 +20,6 @@ params.parse_config(args.config)
 from sklearn.metrics import f1_score,confusion_matrix,accuracy_score,log_loss
 
 
- 
 def train_model():
     grid_parameters ={
         "cell_type":["lstm","gru","rnn"], 
@@ -55,11 +54,9 @@ def train_model():
         params.setup(zip(grid_parameters.keys(),parameter))        
         model = models.setup(params)
         model.train(train,dev=test)
-        
 
 
 if __name__ == '__main__':
-   
 
     train_model()
 
