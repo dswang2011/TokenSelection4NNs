@@ -10,7 +10,7 @@ Do we really need all tokens? Rethinking token selection in neuralnetwork for NL
 
 
 ## running steps
-**Step1:**: Prepare the data (generate the token selection files).
+**Step1**: Prepare the data (generate the token selection files).
 * Python File: "token_selection.py".
 * Add your data into path as follows: prepared/your_dataset_name/your_file_name => e.g. prepared/IMBD/train.csv ; prepared/IMBD/test.csv ; etc..
 * Change the parameter in __main__ , part of the code is shown below:
@@ -21,7 +21,7 @@ Do we really need all tokens? Rethinking token selection in neuralnetwork for NL
 	token_select.token_selection_preparation(nlp = nlp, dataset="IMDB",file_name="test.csv")
 	nlp.close() # Do not forget to close! The backend server will consume a lot memery.
 
-**Step2:**: run the neural model.
+**Step2**: run the neural model.
 * Python File: "main.py".
 * you need to change the parameters in the function of train_model(), especially for the line below:
 -----------------------------
