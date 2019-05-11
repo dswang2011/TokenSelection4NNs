@@ -28,7 +28,7 @@ class LSTM2L(RNNBasic):
         text_branch.add(self.rnncell(units=self.opt.hidden_unit_num,return_sequences=False, activation='relu' ,kernel_constraint=maxnorm(3)))
         text_branch.add(Dropout(self.opt.dropout_rate))
         # text_branch.add(SeqSelfAttention(attention_width=5,attention_activation='sigmoid'))
-        text_branch.add(Dense(2,activation="softmax"))        
+        text_branch.add(Dense(self.opt.nb_classes,activation="softmax"))        
         
         return text_branch
 

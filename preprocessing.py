@@ -6,7 +6,7 @@ import re
 import numpy as np
 from Data import DatasetSchema
 import os
-
+import random
 
 
 class Process(object):

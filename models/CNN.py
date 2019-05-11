@@ -18,6 +18,6 @@ class CNN(BasicModel):
 #        x = Dense(128, activation='relu')(x)
 #        x = Dense(128, activation='relu')(x)
         x = Dense(100,activation='relu')(x)
-        preds = Dense(2, activation='softmax')(x)   # 3 catetory
+        preds = Dense(self.opt.nb_classes, activation='softmax')(x)   # 3 catetory
 
         return Model(sequence_input, preds)

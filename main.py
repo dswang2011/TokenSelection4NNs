@@ -20,7 +20,7 @@ params.parse_config(args.config)
 from sklearn.metrics import f1_score,confusion_matrix,accuracy_score,log_loss
 
 
-def train_model():
+def train_for_document():
     grid_parameters ={
         "cell_type":["lstm","gru","rnn"], 
         "hidden_unit_num":[20,50,75,100,200],
@@ -34,19 +34,19 @@ def train_model():
     # fix cell typ,a nd try different RNN models
     grid_parameters ={
         "cell_type":["gru"], 
-        "hidden_unit_num":[50,100],
-        "dropout_rate" : [0.3],#,0.5,0.75,0.8,1]    ,
-        "model": ["lstm_2L", "bilstm"],
+        "hidden_unit_num":[50],
+        "dropout_rate" : [0.2],#,0.5,0.75,0.8,1]    ,
+        "model": [ "bilstm"],
         # "contatenate":[0],
-        "lr":[0.001,0.01],
-        "batch_size":[32,64],
+        "lr":[0.001],
+        "batch_size":[64],
         # "validation_split":[0.05,0.1,0.15,0.2],
         "validation_split":[0.1],
     }
 
     token_select = TokenSelection(params)
-    train = token_select.get_train(dataset="IMDB",file_name="train.csv",stragety="stopword",POS_category="Noun")
-    test = token_select.get_train(dataset="IMDB",file_name="test.csv",stragety="stopword",POS_category="Noun")
+    train,test = token_select.get_train(dataset="IMDB",stragety="stopword",POS_category="Noun")
+   
 #    val_uncontatenated = process.get_test()
     parameters= [arg for index,arg in enumerate(itertools.product(*grid_parameters.values())) if index%args.gpu_num==args.gpu]
     for parameter in parameters:
@@ -55,10 +55,34 @@ def train_model():
         model = models.setup(params)
         model.train(train,dev=test)
 
+def train_for_document_pair():
+    # fix cell typ,a nd try different RNN models
+    grid_parameters ={
+        "cell_type":["gru"], 
+        "hidden_unit_num":[200],
+        "dropout_rate" : [0.2],#,0.5,0.75,0.8,1]    ,
+        "model": ["lstm_2L", "bilstm"],
+        # "contatenate":[0],
+        "lr":[0.001,0.01],
+        "batch_size":[128],
+        # "validation_split":[0.05,0.1,0.15,0.2],
+        "validation_split":[0.1],
+    }
+    token_select = TokenSelection(params)
+    # process the dataset
+    train = token_select.get_train(dataset="trec",stragety="fulltext",POS_category="Noun")
+   
+#    val_uncontatenated = process.get_test()
+    parameters= [arg for index,arg in enumerate(itertools.product(*grid_parameters.values())) if index%args.gpu_num==args.gpu]
+    for parameter in parameters:
+        print(parameter)
+        params.setup(zip(grid_parameters.keys(),parameter))        
+        model = models.setup(params)
+        model.train_matching(train,dev=test)
 
 if __name__ == '__main__':
 
-    train_model()
+    train_for_document()
 
 
     

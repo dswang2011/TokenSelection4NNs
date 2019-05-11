@@ -3,7 +3,7 @@ from stanfordcorenlp import StanfordCoreNLP
 import numpy as np
 import nltk
 from nltk.corpus import stopwords
-import re
+import re,random
 
 
 # POS tag category
@@ -78,12 +78,25 @@ def get_depth(node):
 	return temp_max+1
 
 
-# random select 
+
 def random_select(nlp,sentence,select_ratio=1.0):
+    word_list = nlp.word_tokenize(sentence)
+    selected_list = []
+    total_select_count = int(len(word_list)*select_ratio)
+    total_count = len(word_list)
+    for i,word in enumerate(word_list):
+        if random.random() < (total_select_count-len(selected_list)) / (total_count-i):
+            selected_list.append(word)
+            
+    return selected_list
+
+# random select 
+def random_select_without_order(nlp,sentence,select_ratio=1.0):
 	word_list = nlp.word_tokenize(sentence)
 	selected_count = int(len(word_list)*select_ratio)
 	selected_index = np.random.choice(len(word_list),selected_count,replace=False)
 	return np.array(word_list)[selected_index].tolist()
+
 def text2tokens_random(nlp,text_list,select_ratio):
 	tokens_list = []
 	for text in text_list:

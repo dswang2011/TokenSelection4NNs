@@ -289,5 +289,20 @@ def load_classification_data(file_path,hasHead=0):
 					label = row[i].strip()
 			labels.append(label)
 	# print('labels:',labels)
+
 	return [texts,labels]
+
+def load_pair_data(file_path,hasHead=0):
+	texts1,texts2=[],[]
+	labels=[]
+	with open(file_path, encoding='utf8') as f:
+		csv_reader = csv.reader(f, delimiter='\t')
+		for row in csv_reader:
+			texts1.append(row[0].strip())
+			texts2.append(row[1].strip())
+            
+			labels.append(row[2].strip())
+	
+	return [[texts1,texts2],labels]
+
 

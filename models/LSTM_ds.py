@@ -28,6 +28,6 @@ class LSTM1(RNNBasic):
         text_branch.add(LSTM(units=self.opt.hidden_unit_num,return_sequences=False, activation='relu', kernel_constraint=maxnorm(3)))
         text_branch.add(Dropout(self.opt.dropout_rate))
         # text_branch.add(SeqSelfAttention(attention_width=5,attention_activation='sigmoid'))
-        text_branch.add(Dense(3,activation="softmax"))        
+        text_branch.add(Dense(self.opt.nb_classes,activation="softmax"))        
         
         return text_branch

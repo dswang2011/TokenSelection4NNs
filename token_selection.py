@@ -27,41 +27,48 @@ class TokenSelection(object):
         return embedding_matrix
 
     # stragety = fulltext, stopword, random, POS, dependency ;
-    def get_train(self,dataset,file_name,stragety="random",selected_ratio=0.9,cut=1,POS_category="Noun"):
-        tokens_list = []
-        labels = []
-        if stragety=="POS":
-            Noun,Verb,Adjective,Noun_Verb,Noun_Adjective,Verb_Adjective,Noun_Verb_Adjective,labels = self.get_selected_token(dataset,file_name,stragety,selected_ratio,cut)
-            if POS_category=="Noun":
-                tokens_list=np.array(Noun)
-            elif POS_category=="Verb":
-                tokens_list=np.array(Verb)
-            elif POS_category=="Adjective":
-                tokens_list=np.array(Adjective)
-            elif POS_category=="Noun_Verb":
-                tokens_list=np.array(Noun_Verb)
-            elif POS_category=="Noun_Adjective":
-                tokens_list=np.array(Noun_Adjective)
-            elif POS_category=="Verb_Adjective":
-                tokens_list=np.array(Verb_Adjective)
-            elif POS_category=="Noun_Verb_Adjective":
-                tokens_list=np.array(Noun_Verb_Adjective)
-        else:
-            tokens_list,labels = self.get_selected_token(dataset,file_name,stragety,selected_ratio,cut) 
-        max_sequence_length=self.opt.max_sequence_length
+    def get_train(self,dataset,stragety="random",selected_ratio=0.9,cut=1,POS_category="Noun"):
+        tokens_list_train_test = []
+        labels_train_test = []
+        for file_name in ["train.csv","test.csv"]:
+#       for file_name in [self.opt.train_file,self.opt.test_file]:
+            if stragety=="POS":
+                Noun,Verb,Adjective,Noun_Verb,Noun_Adjective,Verb_Adjective,Noun_Verb_Adjective,labels = self.get_selected_token(dataset,file_name,stragety,selected_ratio,cut)
+                if POS_category=="Noun":
+                    tokens_list=np.array(Noun)
+                elif POS_category=="Verb":
+                    tokens_list=np.array(Verb)
+                elif POS_category=="Adjective":
+                    tokens_list=np.array(Adjective)
+                elif POS_category=="Noun_Verb":
+                    tokens_list=np.array(Noun_Verb)
+                elif POS_category=="Noun_Adjective":
+                    tokens_list=np.array(Noun_Adjective)
+                elif POS_category=="Verb_Adjective":
+                    tokens_list=np.array(Verb_Adjective)
+                elif POS_category=="Noun_Verb_Adjective":
+                    tokens_list=np.array(Noun_Verb_Adjective)
+            else:
+                tokens_list,labels = self.get_selected_token(dataset,file_name,stragety,selected_ratio,cut) 
+            tokens_list_train_test.append(tokens_list)
+            labels_train_test.append(labels)
+        self.opt.nb_classes = len(set(labels))
         # max_num_words = self.opt.max_num_words
-        word_index = data_reader.tokenizer(tokens_list,self.opt.max_nb_words)
+        all_tokens= [set(sentence) for dataset in tokens_list_train_test for sentence in dataset  ]
+        word_index = data_reader.tokenizer(all_tokens,self.opt.max_nb_words)
         self.opt.word_index = word_index
         print('word_index:',len(word_index))
 
         # padding
-        x_train = data_reader.tokens_list_to_sequences(tokens_list,word_index,max_sequence_length)
-        y_train = to_categorical(np.asarray(labels)) # one-hot encoding y_train = labels # one-hot label encoding
-        
-        print('[train] Shape of data tensor:', x_train.shape)
-        print('[train] Shape of label tensor:', y_train.shape)
+        train_test = []
+        for tokens_list,labels in zip(tokens_list_train_test,labels_train_test):
+            x = data_reader.tokens_list_to_sequences(tokens_list,word_index,self.opt.max_sequence_length)
+            y = to_categorical(np.asarray(labels)) # one-hot encoding y_train = labels # one-hot label encoding
+            train_test.append([x,y])
+            print('[train] Shape of data tensor:', x.shape)
+            print('[train] Shape of label tensor:', y.shape)
         self.opt.embedding_matrix = self.build_word_embedding_matrix(word_index)
-        return x_train,y_train
+        return train_test
 
     # stragety = fulltext, stopword, random, POS, dependency;
     def get_selected_token(self,dataset,file_name,stragety="random",selected_ratio=0.9,cut=1):
@@ -98,14 +105,22 @@ class TokenSelection(object):
         if not os.path.exists(output_root):
             os.mkdir(output_root)
         # load data
-        file_path = os.path.join(output_root,file_name) 
-        texts,labels = data_reader.load_classification_data(file_path,hasHead=0)    # set with 1 if there is head
-
+        file_path = os.path.join(output_root,file_name)
+        if dataset in self.opt.pair_set.split(","):
+            texts,texts2,labels = data_reader.load_pair_data(file_path,hasHead=0)    # set with 1 if there is head
+        else:
+            texts,labels = data_reader.load_classification_data(file_path,hasHead=0)    # set with 1 if there is head
+        
         # full text
         fulltext_pkl = output_root+file_name+"_fulltext.pkl"
         if not os.path.exists(fulltext_pkl):
             tokens_list = CoreNLP.text2tokens_fulltext(nlp,texts)
-            pickle.dump([tokens_list,labels],open(fulltext_pkl, 'wb'))
+            
+            if dataset in self.opt.pair_set.split(","):
+                tokens_list1 = CoreNLP.text2tokens_fulltext(nlp,texts2)
+                pickle.dump([[tokens_list,tokens_list1],labels],open(fulltext_pkl, 'wb'))
+            else:
+                pickle.dump([tokens_list,labels],open(fulltext_pkl, 'wb'))
             print('output succees:',fulltext_pkl)
             print('shape:',tokens_list.shape)
         else:
@@ -115,7 +130,12 @@ class TokenSelection(object):
         stopword_pkl = output_root+file_name+"_stopword.pkl"
         if not os.path.exists(stopword_pkl):
             tokens_list = CoreNLP.text2tokens_stopword(nlp,texts)
-            pickle.dump([tokens_list,labels],open(stopword_pkl, 'wb'))
+            
+            if dataset in self.opt.pair_set.split(","):
+                tokens_list1 = CoreNLP.text2tokens_stopword(nlp,texts2)
+                pickle.dump([[tokens_list,tokens_list1],labels],open(stopword_pkl, 'wb'))
+            else:
+                pickle.dump([tokens_list,labels],open(stopword_pkl, 'wb'))
             print('output succees:',stopword_pkl)
             print('shape:',tokens_list.shape)
         else:
@@ -125,7 +145,11 @@ class TokenSelection(object):
             random_pkl = output_root+file_name+"_random"+str(selected_ratio)+".pkl"
             if not os.path.exists(random_pkl):
                 tokens_list = CoreNLP.text2tokens_random(nlp,texts,selected_ratio)
-                pickle.dump([tokens_list,labels],open(random_pkl, 'wb'))
+                if dataset in self.opt.pair_set.split(","):
+                    tokens_list1 = CoreNLP.text2tokens_random(nlp,texts2)
+                    pickle.dump([[tokens_list,tokens_list1],labels],open(random_pkl, 'wb'))
+                else:
+                    pickle.dump([tokens_list,labels],open(random_pkl, 'wb'))
                 print('output succees:',random_pkl)
                 print('shape:',tokens_list.shape)
             else:
@@ -135,13 +159,18 @@ class TokenSelection(object):
         if not os.path.exists(pos_pkl):
             Noun,Verb,Adjective,Noun_Verb,Noun_Adjective,Verb_Adjective,Noun_Verb_Adjective = CoreNLP.text2token_POS(nlp,texts)
             pickle.dump([Noun,Verb,Adjective,Noun_Verb,Noun_Adjective,Verb_Adjective,Noun_Verb_Adjective,labels],open(pos_pkl, 'wb'))
+            if dataset in self.opt.pair_set.split(","):
+                tokens_list1 = CoreNLP.text2tokens_random(nlp,texts2)
+                pickle.dump([[tokens_list,tokens_list1],labels],open(pos_pkl, 'wb'))
+            else:
+                pickle.dump([tokens_list,labels],open(pos_pkl, 'wb'))
             print('output succees (POSs):',pos_pkl)
             print('each with shape:',np.array(Noun).shape)
         else:
             print("Already exist:",pos_pkl)
             # print('each with shape:',np.array(Noun).shape)
 
-        # dependency tree different cuts
+#         dependency tree different cuts
         cuts = [1,2,3,4]
         for cut in cuts:
         	dependency_pkl = output_root+file_name+"_treecut"+str(cut)+".pkl"
@@ -174,7 +203,7 @@ if __name__ == '__main__':
     token_select = TokenSelection(params)
     nlp = StanfordCoreNLP(params.corenlp_root)
     # below is where you need to set your data name
-    token_select.token_selection_preparation(nlp = nlp, dataset="IMDB",file_name="train.csv")
-    token_select.token_selection_preparation(nlp = nlp, dataset="IMDB",file_name="test.csv")
+#    token_select.token_selection_preparation(nlp = nlp, dataset="IMDB",file_name="train.csv")
+    token_select.token_selection_preparation(nlp = nlp, dataset="IMDB")
     nlp.close() # Do not forget to close! The backend server will consume a lot memery.
 
