@@ -305,4 +305,16 @@ def load_pair_data(file_path,hasHead=0):
 	
 	return [[texts1,texts2],labels]
 
-
+def load_triple_data(file_path):
+	triples=[]
+	labels=[]
+	with open(file_path,'r',encoding='utf8') as f:
+		for line in f:
+			strs = line.split('\t')
+			triples.append(strs[0].strip())
+			label = '0'
+			for i in range(1,len(strs)):
+				if strs[i].strip() in ['0','1']:
+					label = strs[i].strip()
+			labels.append(label)
+	return [triples,labels]

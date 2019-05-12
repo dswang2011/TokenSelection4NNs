@@ -52,6 +52,7 @@ class Node(object):
 	def __init__(self,data=-1,children=[]):
 		self.data=data
 		self.children=[]
+		self.parent=None
 		self.depth = -1
 	def add(self,node):
 		self.children.append(node)
@@ -130,6 +131,7 @@ def build_tree(nlp,sentence):
 			index2Node[point] = new_node
 		point_node = index2Node[point]
 		curr_node = index2Node[index]
+		curr_node.parent=point_node	# set parent
 		point_node.add(curr_node)
 	# layer to nodes
 	layer2node_list = {}
@@ -210,7 +212,7 @@ def get_token_treecuts(nlp,text,cuts=[1,2,3]):
 def text2tokens_treecuts(nlp,text_list,cuts=[1,2,3]):
 	tokens_dict_list = []
 	i=0
-	print('text_list_size:',len(text_list))
+	print('text_list_size:',len(text_list),' for cuts:',str(cuts))
 	print('tree build & cut takes time, we will print the process below:')
 	for text in text_list:
 		text_tokens = get_token_treecuts(nlp,text,cuts)

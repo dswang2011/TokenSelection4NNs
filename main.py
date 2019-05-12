@@ -45,7 +45,7 @@ def train_for_document():
     }
 
     token_select = TokenSelection(params)
-    train,test = token_select.get_train(dataset="IMDB",stragety="stopword",POS_category="Noun")
+    train,test = token_select.get_train(dataset="IMDB",stragety="dependency",selected_ratio=0.5,POS_category="Noun_Verb_Adjective",cut=2)
    
 #    val_uncontatenated = process.get_test()
     parameters= [arg for index,arg in enumerate(itertools.product(*grid_parameters.values())) if index%args.gpu_num==args.gpu]
@@ -70,7 +70,7 @@ def train_for_document_pair():
     }
     token_select = TokenSelection(params)
     # process the dataset
-    train = token_select.get_train(dataset="trec",stragety="fulltext",POS_category="Noun")
+    train = token_select.get_train(dataset="trec",stragety="POS",POS_category="Noun_Verb")
    
 #    val_uncontatenated = process.get_test()
     parameters= [arg for index,arg in enumerate(itertools.product(*grid_parameters.values())) if index%args.gpu_num==args.gpu]
