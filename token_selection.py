@@ -190,21 +190,38 @@ class TokenSelection(object):
             # print('each with shape:',np.array(Noun).shape)
 
 #         dependency tree different cuts
-        cuts = [3,4]
-        # excute for the remaining
-        tokens_dict_list = CoreNLP.text2tokens_treecuts(nlp,texts,cuts)
+        cuts = [1,2,3]
+        exists=[]
         for cut in cuts:
             dependency_pkl = output_root+file_name+"_treecut"+str(cut)+".pkl"
-            if not os.path.exists(dependency_pkl):
-                tokens_list=[]
-                for tokens_dict in tokens_dict_list:
-                    tokens_list.append(tokens_dict[cut]) 
-                pickle.dump([tokens_list,labels],open(dependency_pkl, 'wb'))
-                print('output succees:',dependency_pkl)
-                print('shape:',np.array(tokens_list).shape)
-            else:
-                print("Already exists:",dependency_pkl)
-        
+            if os.path.exists(dependency_pkl):
+                exists.append(cut)
+        cuts = [x for x in cuts if x not in exists]
+        # excute for the remaining
+        if len(cuts)>0:
+            tokens_dict_list = CoreNLP.text2tokens_treecuts(nlp,texts,cuts)
+            for cut in cuts:
+                dependency_pkl = output_root+file_name+"_treecut"+str(cut)+".pkl"
+                if not os.path.exists(dependency_pkl):
+                    tokens_list=[]
+                    for tokens_dict in tokens_dict_list:
+                        tokens_list.append(tokens_dict[cut]) 
+                    pickle.dump([tokens_list,labels],open(dependency_pkl, 'wb'))
+                    print('output succees:',dependency_pkl)
+                    print('shape:',np.array(tokens_list).shape)
+                else:
+                    print("Already exists:",dependency_pkl)
+
+        # entity + tree selection 
+        tokens_list = CoreNLP.text2tokens_entity(nlp,texts)
+        entity_pkl = output_root+file_name+"_entity.pkl"
+        if not os.path.exists(entity_pkl):
+            pickle.dump([tokens_list,labels],open(entity_pkl, 'wb'))
+            print('output succees:',entity_pkl)
+            print('shape:',np.array(tokens_list).shape)
+        else:
+            print("Already exists:",entity_pkl)
+
 # prepare the tokens list into pkl files.
 if __name__ == '__main__':
     params = Params()
@@ -219,6 +236,6 @@ if __name__ == '__main__':
     nlp = StanfordCoreNLP(params.corenlp_root)
     # below is where you need to set your data name
     token_select.token_selection_preparation(nlp = nlp, dataset="IMDB",file_name="train.csv")
-    # token_select.token_selection_preparation(nlp = nlp, dataset="IMDB",file_name="test.csv")
+    token_select.token_selection_preparation(nlp = nlp, dataset="IMDB",file_name="test.csv")
     nlp.close() # Do not forget to close! The backend server will consume a lot memery.
 

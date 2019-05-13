@@ -11,6 +11,8 @@ noun_list = ['NN','NNS','NNP','NNPS']
 verb_list = ['VB', 'VBZ', 'VBD', 'VBG','VBN','VBP']
 adjective_list = ['JJ','JJR','JJS']
 
+punctuations = [';','?',',','.',':']
+
 def get_tokens_POS(nlp,sentence,tag_list):
 	token_tag_list = nlp.pos_tag(sentence)
 	res_tokens = []
@@ -149,6 +151,26 @@ def build_tree(nlp,sentence):
 		print(sentence,':',tuple_list)
 	return layer2node_list
 
+# tree pick up for entities + root
+def tree_pick(layer2node_list,nlp,sentence,entities=[]):
+	selected_nodes = []
+	for layer in range(1,len(layer2node_list)):
+		if layer<3:
+			selected_nodes += layer2node_list[layer]
+		else:
+			for temp_node in layer2node_list[layer]:
+				if temp_node.data in entities:
+					# parent adding
+					if temp_node.parent not in selected_nodes:
+						selected_nodes.append(temp_node.parent)
+					# siblings adding
+					for sib_node in temp_node.parent.children:
+						if sib_node not in selected_nodes:
+							selected_nodes.append(sib_node)
+	sorted_nodes = sorted(selected_nodes, key=lambda x: x.data)
+	word_list = nlp.word_tokenize(sentence)
+	return [word_list[node.data-1] for node in sorted_nodes]
+
 def tree_cut(layer2node_list,nlp,sentence,cut):
 	d_thred = len(layer2node_list)-cut
 	d_thred = np.max([d_thred,3])	# 3 means 1-2, i.e., two layers
@@ -195,7 +217,7 @@ def get_token_treecuts(nlp,text,cuts=[1,2,3]):
 		if len(sent.strip())<3:
 			continue
 		if len(sent)>500:
-			sent=sent[:450]
+			sent=sent[:480]
 		sent = sent+'.'
 		# build tree
 		layer2node_list = build_tree(nlp,sent)
@@ -222,6 +244,44 @@ def text2tokens_treecuts(nlp,text_list,cuts=[1,2,3]):
 			print('processed:',i,'/',len(text_list))
 	return tokens_dict_list
 
+
+# cut mean cutting lower layers, 0 means no cutting, 1 means cut one leaf layer, etc.
+def get_token_entity(nlp,text,customized_tokens=[]):
+	text_tokens = []
+	sentences = re.split('[.|?|!]',text)
+	for sent in sentences:
+		if len(sent.strip())<4:
+			continue
+		if len(sent)>500:
+			sent=sent[:480]
+		sent = sent+'.'
+		# build tree
+		layer2node_list = build_tree(nlp,sent)
+		# tree pickup
+		# entity collect
+		entities = []
+		token_tag_list = nlp.ner(sent)
+		# print('entity tags:',token_tag_list)
+		index = 0
+		for token,tag in token_tag_list:
+			index +=1
+			if tag != 'O':
+				entities.append(index)
+		picked_tokens = tree_pick(layer2node_list,nlp,sent,entities)
+		if '.' not in picked_tokens:
+			picked_tokens.append('.')
+		text_tokens+=picked_tokens
+	return text_tokens
+
+# tree root + entity pick up
+def text2tokens_entity(nlp,text_list, customized_tokens=[]):
+	tokens_list = []
+	for text in text_list:
+		text_tokens = get_token_entity(nlp,text,customized_tokens)
+		tokens_list.append(text_tokens)
+		# print('text tokens:',text_tokens)
+	return tokens_list
+
 ###### test #####
 # dependency tree cutting
 # res_toknes = get_token_dependency(sentence,4)
@@ -229,9 +289,10 @@ def text2tokens_treecuts(nlp,text_list,cuts=[1,2,3]):
 # print(random_select(sentence,select_ratio=0.2))
 # stop word removed
 # # print(stopword_removed(sentence))
-# texts=["I am dongsheng, and I am from China but live in denmark.","This is test."]
+# texts=["I am dongsheng, and I am from China but live in denmark. There are two sents.","This is test."]
 # nlp = StanfordCoreNLP(r'/home/dongsheng/data/resources/stanford-corenlp-full-2018-10-05')
-# tokens_list = text2tokens_treecut5(nlp,texts,cuts=[1,2,3])
+# tokens_list = text2tokens_entity(nlp,texts,customized_tokens=[','])
+# print(tokens_list)
 # print(np.array(tokens_list).shape)
 # for tokens in tokens_list:
 # 	print('->',tokens)
