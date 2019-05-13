@@ -105,6 +105,11 @@ class TokenSelection(object):
             temp = pickle.load(open(dependency_pkl,'rb'))
             token_lists,labels = temp[0],temp[1]
             return token_lists,labels
+        elif stragety == "entity":
+            entity_pkl = output_root+file_name+"_entity.pkl"
+            temp = pickle.load(open(dependency_pkl,'rb'))
+            token_lists,labels = temp[0],temp[1]
+            return token_lists,labels
 
     # If the data is prepared/IMDB/train.txt => dataset=IMDB, file_name=train.txt
     def token_selection_preparation(self,nlp,dataset,file_name):

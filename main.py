@@ -54,6 +54,7 @@ def train_for_document():
         "validation_split":[0.1],
     }
 
+    # strategy = fulltext, stopword, random, POS, dependency, entity ;
     token_select = TokenSelection(params)
     train,test = token_select.get_train(dataset="IMDB",stragety="POS",selected_ratio=0.5,POS_category="Verb",cut=2)
    
@@ -61,7 +62,7 @@ def train_for_document():
     parameters= [arg for index,arg in enumerate(itertools.product(*grid_parameters.values())) if index%args.gpu_num==args.gpu]
     for parameter in parameters:
         print(parameter)
-        params.setup(zip(grid_parameters.keys(),parameter))        
+        params.setup(zip(grid_parameters.keys(),parameter))   
         model = models.setup(params)
         model.train(train,dev=test)
 
