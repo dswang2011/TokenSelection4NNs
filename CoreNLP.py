@@ -276,9 +276,15 @@ def get_token_entity(nlp,text,customized_tokens=[]):
 # tree root + entity pick up
 def text2tokens_entity(nlp,text_list, customized_tokens=[]):
 	tokens_list = []
+	i=0
+	print('text_list_size:',len(text_list))
+	print('entity tree takes time, we will print the process below:')
 	for text in text_list:
 		text_tokens = get_token_entity(nlp,text,customized_tokens)
 		tokens_list.append(text_tokens)
+		i+=1
+		if i%100==0:
+			print('processed:',i,'/',len(text_list))
 		# print('text tokens:',text_tokens)
 	return tokens_list
 

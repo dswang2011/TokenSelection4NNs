@@ -240,7 +240,7 @@ if __name__ == '__main__':
     token_select = TokenSelection(params)
     nlp = StanfordCoreNLP(params.corenlp_root)
     # below is where you need to set your data name
-    token_select.token_selection_preparation(nlp = nlp, dataset="IMDB",file_name="train.csv")
+    # token_select.token_selection_preparation(nlp = nlp, dataset="IMDB",file_name="train.csv")
     token_select.token_selection_preparation(nlp = nlp, dataset="IMDB",file_name="test.csv")
     nlp.close() # Do not forget to close! The backend server will consume a lot memery.
 
