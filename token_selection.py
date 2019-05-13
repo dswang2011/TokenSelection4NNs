@@ -218,9 +218,9 @@ class TokenSelection(object):
                     print("Already exists:",dependency_pkl)
 
         # entity + tree selection 
-        tokens_list = CoreNLP.text2tokens_entity(nlp,texts)
         entity_pkl = output_root+file_name+"_entity.pkl"
         if not os.path.exists(entity_pkl):
+            tokens_list = CoreNLP.text2tokens_entity(nlp,texts)
             pickle.dump([tokens_list,labels],open(entity_pkl, 'wb'))
             print('output succees:',entity_pkl)
             print('shape:',np.array(tokens_list).shape)

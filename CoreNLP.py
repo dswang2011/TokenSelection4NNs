@@ -283,7 +283,7 @@ def text2tokens_entity(nlp,text_list, customized_tokens=[]):
 		text_tokens = get_token_entity(nlp,text,customized_tokens)
 		tokens_list.append(text_tokens)
 		i+=1
-		if i%100==0:
+		if i%50==0:
 			print('processed:',i,'/',len(text_list))
 		# print('text tokens:',text_tokens)
 	return tokens_list
