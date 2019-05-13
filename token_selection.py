@@ -79,6 +79,11 @@ class TokenSelection(object):
         	temp = pickle.load(open(fulltext_pkl,'rb'))
         	token_lists,labels = temp[0],temp[1]
         	return token_lists,labels
+        elif stragety == "triple":
+            triple_pkl = output_root+file_name+"_triple.pkl"
+            temp = pickle.load(open(triple_pkl,'rb'))
+            token_lists,labels = temp[0],temp[1]
+            return token_lists,labels
         elif stragety == "stopword":
             stopword_pkl = output_root+file_name+"_stopword.pkl"
             temp = pickle.load(open(stopword_pkl,'rb'))
@@ -185,11 +190,7 @@ class TokenSelection(object):
             # print('each with shape:',np.array(Noun).shape)
 
 #         dependency tree different cuts
-        cuts = [1,2,3,4]
-        for cut in cuts:
-        	dependency_pkl = output_root+file_name+"_treecut"+str(cut)+".pkl"
-        	if os.path.exists(dependency_pkl):
-        		cuts.remove(cut)
+        cuts = [3,4]
         # excute for the remaining
         tokens_dict_list = CoreNLP.text2tokens_treecuts(nlp,texts,cuts)
         for cut in cuts:
@@ -217,7 +218,7 @@ if __name__ == '__main__':
     token_select = TokenSelection(params)
     nlp = StanfordCoreNLP(params.corenlp_root)
     # below is where you need to set your data name
-    token_select.token_selection_preparation(nlp = nlp, dataset="IMDB",file_name="test.csv")
     token_select.token_selection_preparation(nlp = nlp, dataset="IMDB",file_name="train.csv")
+    # token_select.token_selection_preparation(nlp = nlp, dataset="IMDB",file_name="test.csv")
     nlp.close() # Do not forget to close! The backend server will consume a lot memery.
 

@@ -43,9 +43,19 @@ def train_for_document():
         # "validation_split":[0.05,0.1,0.15,0.2],
         "validation_split":[0.1],
     }
+    # CNN parameters
+    grid_parameters ={
+        "dropout_rate" : [0.3],#,0.5,0.75,0.8,1]    ,
+        "model": ["cnn"],
+        "filter_size":[30,50],
+        "lr":[0.001],
+        "batch_size":[64],
+        # "validation_split":[0.05,0.1,0.15,0.2],
+        "validation_split":[0.1],
+    }
 
     token_select = TokenSelection(params)
-    train,test = token_select.get_train(dataset="IMDB",stragety="dependency",selected_ratio=0.5,POS_category="Noun_Verb_Adjective",cut=2)
+    train,test = token_select.get_train(dataset="IMDB",stragety="fulltext",selected_ratio=0.5,POS_category="Noun_Verb_Adjective",cut=2)
    
 #    val_uncontatenated = process.get_test()
     parameters= [arg for index,arg in enumerate(itertools.product(*grid_parameters.values())) if index%args.gpu_num==args.gpu]
