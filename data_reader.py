@@ -276,6 +276,24 @@ def load_data(tsv_file_path,mode= "train"):
     return np.array(res)
 
 import csv
+#### uncomment this to use for the IMDB dataset ##########
+# def load_classification_data(file_path,hasHead=0):
+# 	texts=[]
+# 	labels=[]
+# 	with open(file_path, encoding='utf8') as f:
+# 		csv_reader = csv.reader(f, delimiter='\t')
+# 		for row in csv_reader:
+# 			texts.append(row[0].strip())
+# 			label = '0'
+# 			for i in range(1,len(row)):
+# 				if row[i].strip() in ['0','1']:
+# 					label = row[i].strip()
+# 			labels.append(label)
+# 	# print('labels:',labels)
+#
+# 	return [texts,labels]
+
+#### THIS IS TO RUN FOR GAP ######
 def load_classification_data(file_path,hasHead=0):
 	texts=[]
 	labels=[]
@@ -283,14 +301,16 @@ def load_classification_data(file_path,hasHead=0):
 		csv_reader = csv.reader(f, delimiter='\t')
 		for row in csv_reader:
 			texts.append(row[0].strip())
-			label = '0'
+			# label = '0'
 			for i in range(1,len(row)):
-				if row[i].strip() in ['0','1']:
-					label = row[i].strip()
+			# 	if row[i].strip() in ['0','1']:
+				label = row[i].strip()
+				# print(label)
 			labels.append(label)
 	# print('labels:',labels)
 
 	return [texts,labels]
+
 
 def load_pair_data(file_path,hasHead=0):
 	texts1,texts2=[],[]
@@ -318,3 +338,26 @@ def load_triple_data(file_path):
 					label = strs[i].strip()
 			labels.append(label)
 	return [triples,labels]
+
+
+def get_texts_from_folder(directory):
+	texts = []
+	for filename in os.listdir(directory):
+		if filename.endswith(".txt"):
+			file_path = os.path.join(directory, filename)
+			file = open(file_path,'r')
+			lines = file.readlines()
+			texts.append(' '.join(lines).replace('\n',''))
+	return texts
+# load MR
+from sklearn.utils import shuffle
+def load_mr_data(folder):
+	pos_texts = get_texts_from_folder(folder+'/'+'pos/')
+	neg_texts = get_texts_from_folder(folder+'/'+'neg/')
+	pos_labels = np.ones(len(pos_texts),dtype=int)
+	neg_labels = np.zeros(len(neg_texts),dtype=int)
+	texts = pos_texts+neg_texts
+	labels = pos_labels.tolist()+neg_labels.tolist()
+	X,y = shuffle(texts, labels, random_state=0)
+	return [X,y]
+

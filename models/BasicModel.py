@@ -12,7 +12,7 @@ class BasicModel(object):
         self.opt=opt
         self.model = self.get_model(opt)
         self.model.compile(optimizer=optimizers.Adam(lr=opt.lr), loss='categorical_crossentropy', metrics=['acc'])
-        
+
     def get_model(self,opt):
 
         return None

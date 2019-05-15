@@ -10,6 +10,8 @@ import numpy as np
 import itertools
 from token_selection import TokenSelection
 
+from sklearn.utils import shuffle
+
 params = Params()
 parser = argparse.ArgumentParser(description='Running Gap.')
 parser.add_argument('-config', action = 'store', dest = 'config', help = 'please enter the config path.',default='config/config.ini')
@@ -21,16 +23,16 @@ from sklearn.metrics import f1_score,confusion_matrix,accuracy_score,log_loss
 
 
 def train_for_document():
-    grid_parameters ={
-        "cell_type":["lstm","gru","rnn"], 
-        "hidden_unit_num":[20,50,75,100,200],
-        "dropout_rate" : [0.1,0.2,0.3],#,0.5,0.75,0.8,1]    ,
-        "model": ["lstm_2L", "bilstm", "bilstm_2L"],
-        "batch_size":[16,32,64],
-        "validation_split":[0.05,0.1,0.15,0.2],
-        "contatenate":[0,1],
-        "lr":[0.001,0.01]       
-    }
+    # grid_parameters ={
+    #     "cell_type":["lstm","gru","rnn"], 
+    #     "hidden_unit_num":[20,50,75,100,200],
+    #     "dropout_rate" : [0.1,0.2,0.3],#,0.5,0.75,0.8,1]    ,
+    #     "model": ["lstm_2L", "bilstm", "bilstm_2L"],
+    #     "batch_size":[16,32,64],
+    #     "validation_split":[0.05,0.1,0.15,0.2],
+    #     "contatenate":[0,1],
+    #     "lr":[0.001,0.01]       
+    # }
     # fix cell typ,a nd try different RNN models
     grid_parameters ={
         "cell_type":["gru"], 
@@ -44,19 +46,22 @@ def train_for_document():
         "validation_split":[0.1],
     }
     # CNN parameters
-    grid_parameters ={
-        "dropout_rate" : [0.3],#,0.5,0.75,0.8,1]    ,
-        "model": ["cnn"],
-        "filter_size":[30,50],
-        "lr":[0.001],
-        "batch_size":[64],
-        # "validation_split":[0.05,0.1,0.15,0.2],
-        "validation_split":[0.1],
-    }
+    # grid_parameters ={
+    #     "dropout_rate" : [0.3],#,0.5,0.75,0.8,1]    ,
+    #     "model": ["cnn"],
+    #     "filter_size":[30,50],
+    #     "lr":[0.001],
+    #     "batch_size":[64],
+    #     # "validation_split":[0.05,0.1,0.15,0.2],
+    #     "validation_split":[0.1],
+    # }
 
     # strategy = fulltext, stopword, random, POS, dependency, entity ;
     token_select = TokenSelection(params)
-    train,test = token_select.get_train(dataset="IMDB",stragety="POS",selected_ratio=0.5,POS_category="Verb",cut=2)
+    train,test = token_select.get_train(dataset="IMDB",strategy="entity",selected_ratio=0.5,POS_category="Noun_Verb",cut=2)
+    # train = token_select.get_train(dataset="IMDB",stragety="entity",selected_ratio=0.8,POS_category="Verb_Adjective",cut=1)
+    # X,y = train[0]
+    # X,y = shuffle(X, y, random_state=0)
    
 #    val_uncontatenated = process.get_test()
     parameters= [arg for index,arg in enumerate(itertools.product(*grid_parameters.values())) if index%args.gpu_num==args.gpu]

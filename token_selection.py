@@ -26,15 +26,15 @@ class TokenSelection(object):
                 embedding_matrix[i] = embedding_vector
         return embedding_matrix
 
-    # stragety = fulltext, stopword, random, POS, dependency ;
-    def get_train(self,dataset,stragety="random",selected_ratio=0.9,cut=1,POS_category="Noun"):
-        print('=====strategy:',stragety,'pos_cat:',POS_category,' cut:',cut,'======')
+    # strategy = fulltext, stopword, random, POS, dependency ;
+    def get_train(self,dataset,strategy="random",selected_ratio=0.9,cut=1,POS_category="Noun"):
+        print('=====strategy:',strategy,'pos_cat:',POS_category,' cut:',cut,'======')
         tokens_list_train_test = []
         labels_train_test = []
         for file_name in ["train.csv","test.csv"]:
 #       for file_name in [self.opt.train_file,self.opt.test_file]:
-            if stragety=="POS":
-                Noun,Verb,Adjective,Noun_Verb,Noun_Adjective,Verb_Adjective,Noun_Verb_Adjective,labels = self.get_selected_token(dataset,file_name,stragety,selected_ratio,cut)
+            if strategy=="POS":
+                Noun,Verb,Adjective,Noun_Verb,Noun_Adjective,Verb_Adjective,Noun_Verb_Adjective,labels = self.get_selected_token(dataset,file_name,strategy,selected_ratio,cut)
                 if POS_category=="Noun":
                     tokens_list=np.array(Noun)
                 elif POS_category=="Verb":
@@ -50,7 +50,7 @@ class TokenSelection(object):
                 elif POS_category=="Noun_Verb_Adjective":
                     tokens_list=np.array(Noun_Verb_Adjective)
             else:
-                tokens_list,labels = self.get_selected_token(dataset,file_name,stragety,selected_ratio,cut) 
+                tokens_list,labels = self.get_selected_token(dataset,file_name,strategy,selected_ratio,cut) 
             tokens_list_train_test.append(tokens_list)
             labels_train_test.append(labels)
         self.opt.nb_classes = len(set(labels))
@@ -71,43 +71,43 @@ class TokenSelection(object):
         self.opt.embedding_matrix = self.build_word_embedding_matrix(word_index)
         return train_test
 
-    # stragety = fulltext, stopword, random, POS, dependency;
-    def get_selected_token(self,dataset,file_name,stragety="random",selected_ratio=0.9,cut=1):
+    # strategy = fulltext, stopword, random, POS, dependency;
+    def get_selected_token(self,dataset,file_name,strategy="random",selected_ratio=0.9,cut=1):
         output_root = "prepared/"+dataset+"/"
-        if stragety == "fulltext":
+        if strategy == "fulltext":
         	fulltext_pkl = output_root+file_name+"_fulltext.pkl"
         	temp = pickle.load(open(fulltext_pkl,'rb'))
         	token_lists,labels = temp[0],temp[1]
         	return token_lists,labels
-        elif stragety == "triple":
+        elif strategy == "triple":
             triple_pkl = output_root+file_name+"_triple.pkl"
             temp = pickle.load(open(triple_pkl,'rb'))
             token_lists,labels = temp[0],temp[1]
             return token_lists,labels
-        elif stragety == "stopword":
+        elif strategy == "stopword":
             stopword_pkl = output_root+file_name+"_stopword.pkl"
             temp = pickle.load(open(stopword_pkl,'rb'))
             token_lists,labels = temp[0],temp[1]
             return token_lists,labels
-        elif stragety =="random":
+        elif strategy =="random":
             random_pkl = output_root+file_name+"_random"+str(selected_ratio)+".pkl"
             temp = pickle.load(open(random_pkl,'rb'))
             token_lists,labels = temp[0],temp[1]
             return token_lists,labels
-        elif stragety =="POS":
+        elif strategy =="POS":
             pos_pkl = output_root+file_name+"_pos.pkl"
             temp = pickle.load(open(pos_pkl,'rb'))
             print('length temp:',len(temp))
             Noun,Verb,Adjective,Noun_Verb,Noun_Adjective,Verb_Adjective,Noun_Verb_Adjective,labels = temp[0],temp[1],temp[2],temp[3],temp[4],temp[5],temp[6],temp[7]
             return Noun,Verb,Adjective,Noun_Verb,Noun_Adjective,Verb_Adjective,Noun_Verb_Adjective,labels
-        elif stragety =="dependency":
+        elif strategy =="dependency":
             dependency_pkl = output_root+file_name+"_treecut"+str(cut)+".pkl"
             temp = pickle.load(open(dependency_pkl,'rb'))
             token_lists,labels = temp[0],temp[1]
             return token_lists,labels
-        elif stragety == "entity":
+        elif strategy == "entity":
             entity_pkl = output_root+file_name+"_entity.pkl"
-            temp = pickle.load(open(dependency_pkl,'rb'))
+            temp = pickle.load(open(entity_pkl,'rb'))
             token_lists,labels = temp[0],temp[1]
             return token_lists,labels
 
@@ -139,16 +139,16 @@ class TokenSelection(object):
             print("Already exist:",fulltext_pkl)
 
         # load triples
-        triple_pkl = output_root+file_name+"_triple.pkl"
-        if not os.path.exists(triple_pkl):
-            triple_path = os.path.join(output_root,file_name.replace('.csv','_triples.txt'))
-            triple_texts,labels = data_reader.load_triple_data(triple_path)
-            tokens_list = CoreNLP.text2tokens_fulltext(nlp,triple_texts)
-            pickle.dump([tokens_list,labels],open(triple_pkl, 'wb'))
-            print('output success',triple_pkl)
-            print('shape:',tokens_list.shape)
-        else:
-            print('Alredy exists:',triple_pkl)
+        # triple_pkl = output_root+file_name+"_triple.pkl"
+        # if not os.path.exists(triple_pkl):
+        #     triple_path = os.path.join(output_root,file_name.replace('.csv','_triples.txt'))
+        #     triple_texts,labels = data_reader.load_triple_data(triple_path)
+        #     tokens_list = CoreNLP.text2tokens_fulltext(nlp,triple_texts)
+        #     pickle.dump([tokens_list,labels],open(triple_pkl, 'wb'))
+        #     print('output success',triple_pkl)
+        #     print('shape:',tokens_list.shape)
+        # else:
+        #     print('Alredy exists:',triple_pkl)
 
         # stodword
         stopword_pkl = output_root+file_name+"_stopword.pkl"
@@ -240,7 +240,7 @@ if __name__ == '__main__':
     token_select = TokenSelection(params)
     nlp = StanfordCoreNLP(params.corenlp_root)
     # below is where you need to set your data name
-    # token_select.token_selection_preparation(nlp = nlp, dataset="IMDB",file_name="train.csv")
+    # token_select.token_selection_preparation(nlp = nlp, dataset="GAP",file_name="train.csv")
     token_select.token_selection_preparation(nlp = nlp, dataset="IMDB",file_name="test.csv")
     nlp.close() # Do not forget to close! The backend server will consume a lot memery.
 
