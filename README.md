@@ -40,8 +40,8 @@ and copy the folder to somewhere and set the *corenlp_root* parameter with the d
 * where you need to specify the dataset and file_name. 
 * if strategy="POS", then POS_category works, possible value: "Noun", "Verb", "Adjective", "Noun_Verb", "Noun_Adjective", "Verb_Adjective", "Noun_Verb_Adjective". 
 * if strategy="fulltext", "stopword", or "entity", then other parameters won't work.
-* if strategy="random", then select_ratio works, possible values: 0.9,0.8,0.7,0.6,0.5
-* if stragety="dependency", then cut works, possible values: 1,2,3
+* if strategy="random", then selected_ratio can work if set, possible values: 0.9,0.8,0.7,0.6,0.5
+* if stragety="dependency", then cut can work if set, possible values: 1,2,3
 
 
 ## configuration
