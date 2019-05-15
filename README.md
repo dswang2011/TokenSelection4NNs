@@ -37,12 +37,11 @@ and copy the folder to somewhere and set the *corenlp_root* parameter with the d
 	# strategy can be: fulltext, stopword, random, POS, dependency, entity
 	train = token_select.get_train(dataset="IMDB",file_name="train.csv",stragety="stopword",POS_category="Noun")
 
-* where you need to specify the dataset and file_name, and strategy, and then you can run your code. Note that if you did not set stragety="POS", the POS_category won't be used. 
-* The strategy combination is constrained as follows: 
-** if strategy="POS", then POS_category works, possible value: "Noun", "Verb", "Adjective", "Noun_Verb", "Noun_Adjective", "Verb_Adjective", "Noun_Verb_Adjective". 
-** if strategy="fulltext", "stopword", or "entity", then other parameters won't work.
-** if strategy="random", then select_ratio works, possible values: 0.9,0.8,0.7,0.6,0.5
-** if stragety="dependency", then cut works, possible values: 1,2,3
+* where you need to specify the dataset and file_name. 
+* if strategy="POS", then POS_category works, possible value: "Noun", "Verb", "Adjective", "Noun_Verb", "Noun_Adjective", "Verb_Adjective", "Noun_Verb_Adjective". 
+* if strategy="fulltext", "stopword", or "entity", then other parameters won't work.
+* if strategy="random", then select_ratio works, possible values: 0.9,0.8,0.7,0.6,0.5
+* if stragety="dependency", then cut works, possible values: 1,2,3
 
 
 ## configuration
