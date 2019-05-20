@@ -18,7 +18,7 @@ class BasicModel(object):
         return None
 
     
-    def train(self,train,dev=None,dirname="saved_model"):
+    def train(self,train,dev=None,dirname="saved_model", stragety=None):
         x_train,y_train = train
         
         
@@ -30,7 +30,7 @@ class BasicModel(object):
         else:
             x_val, y_val = dev
             history = self.model.fit(x_train,y_train,batch_size=self.opt.batch_size,epochs=self.opt.epoch_num,callbacks=callbacks,validation_data=(x_val, y_val),shuffle=True) 
-        os.rename(filename,os.path.join( dirname,  str(min(history.history["acc"])) +"_" + self.__class__.__name__+"_"+self.opt.to_string()+".h5" ))
+        os.rename(filename,os.path.join( dirname,  str(min(history.history["acc"]))+"_"+stragety+"_" + self.__class__.__name__+"_"+self.opt.to_string()+".h5" ))
         
        
     def predict(self,x_test):

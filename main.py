@@ -20,7 +20,7 @@ parser.add_argument('-gpu', action = 'store', dest = 'gpu', help = 'please enter
 args = parser.parse_args()
 params.parse_config(args.config)
 from sklearn.metrics import f1_score,confusion_matrix,accuracy_score,log_loss
-
+import time
 
 def train_for_document():
     # grid_parameters ={
@@ -57,8 +57,10 @@ def train_for_document():
     # }
 
     # strategy = fulltext, stopword, random, POS, dependency, entity ;
+    stragety = "random"
     token_select = TokenSelection(params)
-    train,test = token_select.get_train(dataset="IMDB",strategy="entity",selected_ratio=0.5,POS_category="Noun_Verb",cut=2)
+    # train,test = token_select.get_train(dataset="IMDB",strategy="entity",selected_ratio=0.5,POS_category="Noun_Verb",cut=2)
+    train,test = token_select.get_train(dataset="GAP",stragety=stragety,selected_ratio=0.8,POS_category="Noun_Verb",cut=2)
     # train = token_select.get_train(dataset="IMDB",stragety="entity",selected_ratio=0.8,POS_category="Verb_Adjective",cut=1)
     # X,y = train[0]
     # X,y = shuffle(X, y, random_state=0)
@@ -69,8 +71,10 @@ def train_for_document():
         print(parameter)
         params.setup(zip(grid_parameters.keys(),parameter))   
         model = models.setup(params)
-        model.train(train,dev=test)
-
+        start = time.time()
+        model.train(train,dev=test, stragety=stragety) ### Stragety here is just for printing the type
+        end = time.time()
+        print ("Time spent training .. ", end-start)
 def train_for_document_pair():
     # fix cell typ,a nd try different RNN models
     grid_parameters ={

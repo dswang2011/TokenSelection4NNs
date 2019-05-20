@@ -361,3 +361,12 @@ def load_mr_data(folder):
 	X,y = shuffle(texts, labels, random_state=0)
 	return [X,y]
 
+# Process MR 
+def write_content(file_path,content):
+	with open(file_path,'a',encoding='utf8') as fw:
+		fw.write(content)
+X,y = load_mr_data("/home/dongsheng/code/TokenSelection4NNs/prepared/MR/txt_sentoken/")
+for i in range(len(X)):
+	content = X[i].replace('\t',' ').strip()+'\t'+str(y[i])
+	write_content("mr.csv",content+'\n')
+
