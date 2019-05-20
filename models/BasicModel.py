@@ -60,8 +60,8 @@ class BasicModel(object):
 
             q_rep = representation_model(self.question)
 
-            score1 = Cosine([q_rep, representation_model.get_representation(self.answer)])
-            score2 = Cosine([q_rep, representation_model.get_representation(self.neg_answer)])
+            score1 = Cosine([q_rep, representation_model(self.answer)])
+            score2 = Cosine([q_rep, representation_model(self.neg_answer)])
             basic_loss = MarginLoss(self.opt.margin)([score1,score2])
             
             output=[score1,score2,basic_loss]
