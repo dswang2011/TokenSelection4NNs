@@ -21,6 +21,8 @@ def setup(opt):
         model = BiLSTM(opt)
     elif opt.model == "bilstm_2L":
         model = BiLSTM2L(opt)
+    elif opt.model == "bilstm_2inputs":
+        model = BiLSTM_2inputs(opt)
     else:
         raise Exception("model not supported: {}".format(opt.model))
 

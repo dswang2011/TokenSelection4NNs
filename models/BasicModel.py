@@ -64,11 +64,11 @@ class BasicModel(object):
             score2 = Cosine([q_rep, representation_model.get_representation(self.neg_answer)])
             basic_loss = MarginLoss(self.opt.margin)([score1,score2])
             
-            output=[score1,basic_loss,basic_loss]
+            output=[score1,score2,basic_loss]
             model = Model([self.question, self.answer, self.neg_answer], output) 
             model.compile(loss = identity_loss,optimizer = getOptimizer(name=self.opt.lr.optimizer,lr=self.opt.lr), 
                           metrics=[precision_batch],loss_weights=[0.0, 1.0,0.0])
-        
+
     
     def train_matching(self,train,dev=None,dirname="saved_model"):
         self.model =  self.get_pair_model(self.opt)
