@@ -79,7 +79,6 @@ class TokenSelection(object):
     # stragety = fulltext, stopword, random, POS, dependency;
     def get_selected_token(self,dataset,file_name,stragety="random",selected_ratio=0.9,cut=1):
         output_root = "prepared/"+dataset+"/"
-        pkl_file_path = 
         if stragety == "fulltext":
         	pkl_file_path = output_root+file_name+"_fulltext.pkl"
         elif stragety == "triple":
@@ -106,15 +105,19 @@ class TokenSelection(object):
     # If the data is prepared/IMDB/train.txt => dataset=IMDB, file_name=train.txt
     def token_selection_preparation(self,nlp,dataset,file_name):
         output_root = "prepared/"+dataset+"/"
+        print(output_root)
         if not os.path.exists(output_root):
             os.mkdir(output_root)
         # load data
         file_path = os.path.join(output_root,file_name)
+        print('load data:',file_path)
         if dataset in self.opt.pair_set.split(","):
             texts,texts2,labels = data_reader.load_pair_data(file_path,hasHead=0)    # set with 1 if there is head
+            print(texts[0],' 2:',texts2[0],' label:',labels[0])
         else:
             texts,labels = data_reader.load_classification_data(file_path,hasHead=0)    # set with 1 if there is head
-        
+            print(texts[0],' 2:',' label:',labels[0])
+
         # full text
         fulltext_pkl = output_root+file_name+"_fulltext.pkl"
         if not os.path.exists(fulltext_pkl):
@@ -162,7 +165,7 @@ class TokenSelection(object):
             if not os.path.exists(random_pkl):
                 tokens_list = CoreNLP.text2tokens_random(nlp,texts,selected_ratio)
                 if dataset in self.opt.pair_set.split(","):
-                    tokens_list1 = CoreNLP.text2tokens_random(nlp,texts2)
+                    tokens_list1 = CoreNLP.text2tokens_random(nlp,texts2,selected_ratio)
                     pickle.dump([[tokens_list,tokens_list1],labels],open(random_pkl, 'wb'))
                 else:
                     pickle.dump([tokens_list,labels],open(random_pkl, 'wb'))
@@ -174,12 +177,13 @@ class TokenSelection(object):
         pos_pkl = output_root+file_name+"_pos.pkl"
         if not os.path.exists(pos_pkl):
             Noun,Verb,Adjective,Noun_Verb,Noun_Adjective,Verb_Adjective,Noun_Verb_Adjective = CoreNLP.text2token_POS(nlp,texts)
-            pickle.dump([Noun,Verb,Adjective,Noun_Verb,Noun_Adjective,Verb_Adjective,Noun_Verb_Adjective,labels],open(pos_pkl, 'wb'))
-            # if dataset in self.opt.pair_set.split(","):
-            #     tokens_list1 = CoreNLP.text2tokens_random(nlp,texts2)
-            #     pickle.dump([[tokens_list,tokens_list1],labels],open(pos_pkl, 'wb'))
-            # else:
-            #     pickle.dump([tokens_list,labels],open(pos_pkl, 'wb'))
+            if dataset in self.opt.pair_set.split(","):
+                Noun1,Verb1,Adjective1,Noun_Verb1,Noun_Adjective1,Verb_Adjective1,Noun_Verb_Adjective1 = CoreNLP.text2token_POS(nlp,texts2)
+                # 1-> 8 (0->7)
+                pickle.dump([Noun,Verb,Adjective,Noun_Verb,Noun_Adjective,Verb_Adjective,Noun_Verb_Adjective,
+                             Noun1,Verb1,Adjective1,Noun_Verb1,Noun_Adjective1,Verb_Adjective1,Noun_Verb_Adjective1,labels],open(pos_pkl, 'wb'))
+            else:
+                pickle.dump([Noun,Verb,Adjective,Noun_Verb,Noun_Adjective,Verb_Adjective,Noun_Verb_Adjective,labels],open(pos_pkl, 'wb'))
             print('output succees (POSs):',pos_pkl)
             print('each with shape:',np.array(Noun).shape)
         else:
@@ -197,25 +201,45 @@ class TokenSelection(object):
         # excute for the remaining
         if len(cuts)>0:
             tokens_dict_list = CoreNLP.text2tokens_treecuts(nlp,texts,cuts)
-            for cut in cuts:
-                dependency_pkl = output_root+file_name+"_treecut"+str(cut)+".pkl"
-                if not os.path.exists(dependency_pkl):
-                    tokens_list=[]
-                    for tokens_dict in tokens_dict_list:
-                        tokens_list.append(tokens_dict[cut]) 
-                    pickle.dump([tokens_list,labels],open(dependency_pkl, 'wb'))
-                    print('output succees:',dependency_pkl)
-                    print('shape:',np.array(tokens_list).shape)
-                else:
-                    print("Already exists:",dependency_pkl)
+            if dataset in self.opt.pair_set.split(","):
+                tokens_dict_list1 = CoreNLP.text2tokens_treecuts(nlp,texts,cuts)
+                for cut in cuts:
+                    dependency_pkl = output_root+file_name+"_treecut"+str(cut)+".pkl"
+                    if not os.path.exists(dependency_pkl):
+                        tokens_list=[],tokens_list1=[]
+                        for tokens_dict in tokens_dict_list:
+                            tokens_list.append(tokens_dict[cut])
+                        for tokens_dict1 in tokens_dict_list1:
+                            tokens_list1.append(tokens_dict1[cut]) 
+                        pickle.dump([[tokens_list,tokens_list1],labels],open(dependency_pkl, 'wb'))
+                        print('output succees:',dependency_pkl)
+                        print('shape:',np.array(tokens_list).shape)
+                    else:
+                        print("Already exists:",dependency_pkl)
+            else:
+                for cut in cuts:
+                    dependency_pkl = output_root+file_name+"_treecut"+str(cut)+".pkl"
+                    if not os.path.exists(dependency_pkl):
+                        tokens_list=[]
+                        for tokens_dict in tokens_dict_list:
+                            tokens_list.append(tokens_dict[cut]) 
+                        pickle.dump([tokens_list,labels],open(dependency_pkl, 'wb'))
+                        print('output succees:',dependency_pkl)
+                        print('shape:',np.array(tokens_list).shape)
+                    else:
+                        print("Already exists:",dependency_pkl)
 
         # entity + tree selection 
         entity_pkl = output_root+file_name+"_entity.pkl"
         if not os.path.exists(entity_pkl):
             tokens_list = CoreNLP.text2tokens_entity(nlp,texts)
-            pickle.dump([tokens_list,labels],open(entity_pkl, 'wb'))
+            if dataset in self.opt.pair_set.split(","):
+                tokens_list1 = CoreNLP.text2tokens_entity(nlp,texts2)
+                pickle.dump([[tokens_list,tokens_list1],labels],open(entity_pkl, 'wb'))
+            else:
+                pickle.dump([tokens_list,labels],open(entity_pkl, 'wb'))
             print('output succees:',entity_pkl)
-            print('shape:',np.array(tokens_list).shape)
+            print('shape:',tokens_list.shape)
         else:
             print("Already exists:",entity_pkl)
 
@@ -230,9 +254,12 @@ if __name__ == '__main__':
     params.parse_config(args.config)
 
     token_select = TokenSelection(params)
+    print('start:')
+    print('load:',params.corenlp_root)
     nlp = StanfordCoreNLP(params.corenlp_root)
+    print('load end')
     # below is where you need to set your data name
-    token_select.token_selection_preparation(nlp = nlp, dataset="GAP",file_name="train.csv")
-    token_select.token_selection_preparation(nlp = nlp, dataset="GAP",file_name="test.csv")
+#    token_select.token_selection_preparation(nlp = nlp, dataset="GAP",file_name="train.csv")
+    token_select.token_selection_preparation(nlp = nlp, dataset="factcheck",file_name="test.csv")
     nlp.close() # Do not forget to close! The backend server will consume a lot memery.
 

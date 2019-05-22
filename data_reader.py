@@ -2,7 +2,7 @@
 import os
 #task: 1. get tokenized diction; 2. 
 
-import stanfordnlp
+#import stanfordnlp
 import NLP
 import numpy as np
 import codecs
@@ -318,11 +318,10 @@ def load_pair_data(file_path,hasHead=0):
 	with open(file_path, encoding='utf8') as f:
 		csv_reader = csv.reader(f, delimiter='\t')
 		for row in csv_reader:
-			texts1.append(row[0].strip())
-			texts2.append(row[1].strip())
+			texts1.append(row[1].strip())
+			texts2.append(row[3].strip())
             
 			labels.append(row[2].strip())
-	
 	return [[texts1,texts2],labels]
 
 def load_triple_data(file_path):
@@ -360,13 +359,11 @@ def load_mr_data(folder):
 	labels = pos_labels.tolist()+neg_labels.tolist()
 	X,y = shuffle(texts, labels, random_state=0)
 	return [X,y]
-
 # Process MR 
-def write_content(file_path,content):
-	with open(file_path,'a',encoding='utf8') as fw:
-		fw.write(content)
-X,y = load_mr_data("/home/dongsheng/code/TokenSelection4NNs/prepared/MR/txt_sentoken/")
-for i in range(len(X)):
-	content = X[i].replace('\t',' ').strip()+'\t'+str(y[i])
-	write_content("mr.csv",content+'\n')
-
+# def write_content(file_path,content):
+# 	with open(file_path,'a',encoding='utf8') as fw:
+# 		fw.write(content)
+# X,y = load_mr_data("/home/dongsheng/code/TokenSelection4NNs/prepared/MR/txt_sentoken/")
+# for i in range(len(X)):
+# 	content = X[i].replace('\t',' ').strip()+'\t'+str(y[i])
+# 	write_content("mr.csv",content+'\n')
