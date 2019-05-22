@@ -318,9 +318,10 @@ def load_pair_data(file_path,hasHead=0):
 	with open(file_path, encoding='utf8') as f:
 		csv_reader = csv.reader(f, delimiter='\t')
 		for row in csv_reader:
+			max_snippets = np.maximum(5,len(row)-3)
 			texts1.append(row[1].strip())
-			texts2.append(row[3].strip())
-            
+            text2 = ' '.join(rows[3:max_snippets])
+            texts2.append(text2.strip())
 			labels.append(row[2].strip())
 	return [[texts1,texts2],labels]
 
