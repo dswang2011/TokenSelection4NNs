@@ -18,7 +18,7 @@ class BasicModel(object):
         return None
 
     
-    def train(self,train,dev=None,dirname="saved_model", stragety=None):
+    def train(self,train,dev=None,dirname="saved_model",strategy=None):
         x_train,y_train = train
         
         
@@ -30,7 +30,9 @@ class BasicModel(object):
         else:
             x_val, y_val = dev
             history = self.model.fit(x_train,y_train,batch_size=self.opt.batch_size,epochs=self.opt.epoch_num,callbacks=callbacks,validation_data=(x_val, y_val),shuffle=True) 
-        os.rename(filename,os.path.join( dirname,  str(min(history.history["acc"]))+"_"+stragety+"_" + self.__class__.__name__+"_"+self.opt.to_string()+".h5" ))
+        print('strategy:',strategy)
+        print('history:',str(min(history.history["acc"])))
+        os.rename(filename,os.path.join( dirname,  str(min(history.history["acc"]))+"_"+strategy+"_" + self.__class__.__name__+"_"+self.opt.to_string()+".h5" ))
         
        
     def predict(self,x_test):
@@ -42,11 +44,15 @@ class BasicModel(object):
         return filename
     
     def get_pair_model(self,opt):
-        representation_model = self.model
-        representation_model.pop()
-        self.question = Input(shape=(self.opt.max_sequence_length,), dtype='float32')
-        self.answer = Input(shape=(self.opt.max_sequence_length,), dtype='float32')
-        self.neg_answer = Input(shape=(self.opt.max_sequence_length,), dtype='float32')
+        # representation_model = self.model
+        # representation_model.layers.pop()
+        # representation_model = Model(inputs=self.model.input, output=self.model.get_layer('previous_layer').output)
+        representation_model = Model(inputs=self.model.input, output=self.model.layers[-2].output)
+        representation_model.summary()
+
+        self.question = Input(shape=(self.opt.max_sequence_length,), dtype='int32')
+        self.answer = Input(shape=(self.opt.max_sequence_length,), dtype='int32')
+        self.neg_answer = Input(shape=(self.opt.max_sequence_length,), dtype='int32')
         
         if self.opt.match_type == 'pointwise':
             reps = [representation_model(doc) for doc in [self.question, self.answer]]
@@ -70,9 +76,9 @@ class BasicModel(object):
         return model
 
     
-    def train_matching(self,train,dev=None,dirname="saved_model"):
+    def train_matching(self,train,dev=None,dirname="saved_model",strategy=None):
         self.model =  self.get_pair_model(self.opt)
-        self.train(train,dev=dev,dirname=dirname)
+        self.train(train,dev=dev,dirname=dirname,strategy=strategy)
 
 
 

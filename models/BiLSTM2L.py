@@ -26,12 +26,6 @@ class BiLSTM2L(RNNBasic):
         text_branch.add(Bidirectional(self.rnncell(units=self.opt.hidden_unit_num_second,return_sequences=True)))  # 300
         text_branch.add(Dropout(self.opt.dropout_rate))
         text_branch.add(Bidirectional(self.rnncell(units=self.opt.hidden_unit_num,return_sequences=False)))  # 200
-        # # text_branch.add(Dropout(0.2))
-        # # text_branch.add(SeqSelfAttention(attention_width=5,attention_activation='sigmoid'))
-        # text_branch.add(Dense(128,activation="relu"))
-        # text_branch.add(Dense(128,activation="relu"))
-        # text_branch.add(Dense(3,activation="softmax"))
-        # text_branch.add(LSTM(400, return_sequences=True))
         text_branch.add(Dropout(self.opt.dropout_rate))
         # text_branch.add(Dense(100, return_sequences=False))
         # text_branch.add(Dropout(0.2))
