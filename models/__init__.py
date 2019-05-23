@@ -11,7 +11,7 @@ from models.BiLSTM2L import BiLSTM2L
 def setup(opt):
     
     if opt.contatenate==1:
-            opt.max_sequence_length = opt.max_sequence_length_contatenate  
+            opt.max_sequence_length = opt.max_sequence_length_long  
             
     if opt.model == "lstm_2L":
         model = LSTM2L(opt)

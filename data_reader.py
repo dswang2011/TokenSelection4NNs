@@ -318,12 +318,18 @@ def load_pair_data(file_path,hasHead=0):
 	with open(file_path, encoding='utf8') as f:
 		csv_reader = csv.reader(f, delimiter='\t')
 		for row in csv_reader:
+			claim_id = row[0].strip()
+			if 'pomt' not in claim_id:
+				continue
+			label = row[2].strip().lower()
+			if label not in ['true','false','no flip','half-true','pants on fire!','half flip','mostly true','full flop','mostly false']:
+				continue
 			max_snippets = np.maximum(5,len(row)-3)
 			texts1.append(row[1].strip())
-            text2 = ' '.join(rows[3:max_snippets])
-            texts2.append(text2.strip())
-			labels.append(row[2].strip())
-	return [[texts1,texts2],labels]
+			text2 = ' '.join(row[3:max_snippets])
+			texts2.append(text2.strip())
+			labels.append(label)
+	return texts1,texts2,labels
 
 def load_triple_data(file_path):
 	triples=[]

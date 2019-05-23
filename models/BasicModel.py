@@ -5,7 +5,7 @@ import os
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.models import Model, Input, model_from_json, load_model, Sequential
 from keras import backend as K
-from keras.layers import Layer,Dense
+from keras.layers import Layer,Dense, Concatenate
 from models.matching import Attention,getOptimizer,precision_batch,identity_loss,MarginLoss,Cosine
 class BasicModel(object):
     def __init__(self,opt): 
@@ -41,7 +41,7 @@ class BasicModel(object):
         self.model.save(filename)
         return filename
     
-    def get_pair_model(self):
+    def get_pair_model(self,opt):
         representation_model = self.model
         representation_model.pop()
         self.question = Input(shape=(self.opt.max_sequence_length,), dtype='float32')
@@ -50,8 +50,7 @@ class BasicModel(object):
         
         if self.opt.match_type == 'pointwise':
             reps = [representation_model(doc) for doc in [self.question, self.answer]]
-            output = Dense(self.opt.nb_classes, activation="softmax")(Attention()(reps))
-           
+            output = Dense(self.opt.nb_classes, activation="softmax")(Concatenate()(reps))
 #         ,
             model = Model([self.question,self.answer], output)
             model.compile(loss = "categorical_hinge",  optimizer = getOptimizer(name=self.opt.optimizer,lr=self.opt.lr), metrics=["acc"])
@@ -68,6 +67,7 @@ class BasicModel(object):
             model = Model([self.question, self.answer, self.neg_answer], output) 
             model.compile(loss = identity_loss,optimizer = getOptimizer(name=self.opt.lr.optimizer,lr=self.opt.lr), 
                           metrics=[precision_batch],loss_weights=[0.0, 1.0,0.0])
+        return model
 
     
     def train_matching(self,train,dev=None,dirname="saved_model"):

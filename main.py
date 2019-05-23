@@ -22,6 +22,16 @@ params.parse_config(args.config)
 from sklearn.metrics import f1_score,confusion_matrix,accuracy_score,log_loss
 import time
 
+def draw_result(predicted, val):
+    print('loss:',log_loss(val,predicted)) 
+    
+    
+    ground_label = np.array(val).argmax(axis=1)
+    predicted_label = np.array(predicted).argmax(axis=1)
+    print('F1:',f1_score(predicted_label ,ground_label,average='macro'))
+    print('accuracy:',accuracy_score(predicted_label ,ground_label))
+    print(confusion_matrix(predicted_label ,ground_label))
+
 def train_for_document():
     # grid_parameters ={
     #     "cell_type":["lstm","gru","rnn"], 
@@ -34,27 +44,27 @@ def train_for_document():
     #     "lr":[0.001,0.01]       
     # }
     # fix cell typ,a nd try different RNN models
-    grid_parameters ={
-        "cell_type":["gru"], 
-        "hidden_unit_num":[50],
-        "dropout_rate" : [0.2],#,0.5,0.75,0.8,1]    ,
-        "model": [ "bilstm"],
-        # "contatenate":[0],
-        "lr":[0.001],
-        "batch_size":[64],
-        # "validation_split":[0.05,0.1,0.15,0.2],
-        "validation_split":[0.1],
-    }
-    # CNN parameters
     # grid_parameters ={
-    #     "dropout_rate" : [0.3],#,0.5,0.75,0.8,1]    ,
-    #     "model": ["cnn"],
-    #     "filter_size":[30,50],
+    #     "cell_type":["gru"], 
+    #     "hidden_unit_num":[50],
+    #     "dropout_rate" : [0.2],#,0.5,0.75,0.8,1]    ,
+    #     "model": [ "bilstm"],
+    #     # "contatenate":[0],
     #     "lr":[0.001],
     #     "batch_size":[64],
     #     # "validation_split":[0.05,0.1,0.15,0.2],
     #     "validation_split":[0.1],
     # }
+    # CNN parameters
+    grid_parameters ={
+        "dropout_rate" : [0.3],#,0.5,0.75,0.8,1]    ,
+        "model": ["cnn"],
+        "filter_size":[30,50],
+        "lr":[0.001],
+        "batch_size":[64],
+        # "validation_split":[0.05,0.1,0.15,0.2],
+        "validation_split":[0.1],
+    }
 
     # strategy = fulltext, stopword, random, POS, dependency, entity ;
     stragety = "random"
@@ -83,15 +93,24 @@ def train_for_document_pair():
         "dropout_rate" : [0.2],#,0.5,0.75,0.8,1]    ,
         "model": ["lstm_2L", "bilstm"],
         # "contatenate":[0],
-        "lr":[0.001,0.01],
+        "lr":[0.001],
         "batch_size":[128],
+        # "validation_split":[0.05,0.1,0.15,0.2],
+        "validation_split":[0.1],
+    }
+    grid_parameters ={
+        "dropout_rate" : [0.3],#,0.5,0.75,0.8,1]    ,
+        "model": ["cnn"],
+        "filter_size":[25,50],
+        "lr":[0.001],
+        "batch_size":[64],
         # "validation_split":[0.05,0.1,0.15,0.2],
         "validation_split":[0.1],
     }
     token_select = TokenSelection(params)
     # process the dataset
-    train = token_select.get_train(dataset="trec",stragety="POS",POS_category="Verb_Adjective")
-   
+    train,test = token_select.get_train(dataset="factcheck",stragety="fulltext",POS_category="Verb_Adjective")
+
 #    val_uncontatenated = process.get_test()
     parameters= [arg for index,arg in enumerate(itertools.product(*grid_parameters.values())) if index%args.gpu_num==args.gpu]
     for parameter in parameters:
@@ -99,10 +118,13 @@ def train_for_document_pair():
         params.setup(zip(grid_parameters.keys(),parameter))        
         model = models.setup(params)
         model.train_matching(train,dev=test)
+        # test output
+        predicted = model.predict(test[0])
+        draw_result(predicted,test[1])
 
 if __name__ == '__main__':
-
-    train_for_document()
+    train_for_document_pair()
+    # train_for_document()
 
 
     
