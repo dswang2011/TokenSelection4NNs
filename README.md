@@ -70,3 +70,9 @@ Our config.ini looks like below:
 	dataset_dir = input/dataset
 	model= bilstm2
 
+
+## data load in other models
+** python file: data_reader.py
+** MR, IMDB : function -> load_classification_data(file_path,hasHead=0) ; return texts, labels
+** factcheck: function -> load_pair_data(file_path,hasHead=0); return texts1,texts2,labels (claims, support_docs, labels)
+ 

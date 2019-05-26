@@ -274,7 +274,7 @@ class TokenSelection(object):
 			else:
 				pickle.dump([tokens_list,labels],open(entity_pkl, 'wb'))
 			print('output succees:',entity_pkl)
-			print('shape:',tokens_list.shape)
+			print('shape:',np.array(tokens_list).shape)
 		else:
 			print("Already exists:",entity_pkl)
 
@@ -289,12 +289,19 @@ if __name__ == '__main__':
 	params.parse_config(args.config)
 
 	token_select = TokenSelection(params)
-	print('start:')
-	print('load:',params.corenlp_root)
-	nlp = StanfordCoreNLP(params.corenlp_root)
-	print('load end')
-	# below is where you need to set your data name
-	token_select.token_selection_preparation(nlp = nlp, dataset="factcheck",file_name="train.csv")
-	# token_select.token_selection_preparation(nlp = nlp, dataset="factcheck",file_name="test.csv")
-	nlp.close() # Do not forget to close! The backend server will consume a lot memery.
+
+	# # token selection
+	# nlp = StanfordCoreNLP(params.corenlp_root)
+	# # below is where you need to set your data name
+	# token_select.token_selection_preparation(nlp = nlp, dataset="factcheck",file_name="train.csv")
+	# # token_select.token_selection_preparation(nlp = nlp, dataset="factcheck",file_name="test.csv")
+	# nlp.close() # Do not forget to close! The backend server will consume a lot memery.
+
+	# test output some data
+	train,test = token_select.get_train("IMDB",strategy="fulltext",selected_ratio=0.9,cut=1,POS_category="Noun")
+	test_x = test[0]
+	test_y = test[1]
+	for i in range(2):
+		print(test_x[i],' -> ',test_y[i],'\n')
+
 

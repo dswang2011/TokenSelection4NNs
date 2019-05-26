@@ -301,14 +301,13 @@ def load_classification_data(file_path,hasHead=0):
 		csv_reader = csv.reader(f, delimiter='\t')
 		for row in csv_reader:
 			texts.append(row[0].strip())
-			# label = '0'
+			label = '0'
 			for i in range(1,len(row)):
-			# 	if row[i].strip() in ['0','1']:
-				label = row[i].strip()
+				if row[i].strip() in ['0','1',0,1]:
+					label = row[i].strip()
 				# print(label)
 			labels.append(label)
 	# print('labels:',labels)
-
 	return [texts,labels]
 
 

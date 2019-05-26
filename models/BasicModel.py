@@ -30,7 +30,7 @@ class BasicModel(object):
         else:
             x_val, y_val = dev
             history = self.model.fit(x_train,y_train,batch_size=self.opt.batch_size,epochs=self.opt.epoch_num,callbacks=callbacks,validation_data=(x_val, y_val),shuffle=True) 
-        print('strategy:',strategy)
+        print('strategy:',strategy,' on model:',self.__class__.__name__)
         print('history:',str(min(history.history["acc"])))
         os.rename(filename,os.path.join( dirname,  str(min(history.history["acc"]))+"_"+strategy+"_" + self.__class__.__name__+"_"+self.opt.to_string()+".h5" ))
         

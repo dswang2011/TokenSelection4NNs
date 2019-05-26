@@ -289,17 +289,48 @@ def text2tokens_entity(nlp,text_list, customized_tokens=[]):
 	return tokens_list
 
 ###### test #####
-# dependency tree cutting
-# res_toknes = get_token_dependency(sentence,4)
-# random selection
-# print(random_select(sentence,select_ratio=0.2))
-# stop word removed
-# # print(stopword_removed(sentence))
-# texts=["I am dongsheng, and I am from China but live in denmark. There are two sents.","This is test."]
-# nlp = StanfordCoreNLP(r'/home/dongsheng/data/resources/stanford-corenlp-full-2018-10-05')
-# tokens_list = text2tokens_entity(nlp,texts,customized_tokens=[','])
-# print(tokens_list)
-# print(np.array(tokens_list).shape)
-# for tokens in tokens_list:
-# 	print('->',tokens)
-# nlp.close()
+
+
+
+texts=["We were the No. 1 job creator in America in February and we are now the No. 4 job creator in the last year.",
+"Property owners in New York City will be fined $250,000 for using \"improper pronouns\" due to new transgender laws.",
+"Saudi Arabian Racehorse Executed for Being Homosexual",
+"Ellen DeGeneres Warning Justin Bieber To Get Help,",
+"President Obama fired Rear Admiral Rick Williams for \"questioning\" the President's purported recent purchase of a mansion in Dubai."]
+
+nlp = StanfordCoreNLP(r'/home/dongsheng/data/resources/stanford-corenlp-full-2018-10-05')
+
+for text in texts:
+	print('=====================================')
+	# fulltext
+	print('fulltext: ',nlp.word_tokenize(text))
+
+	# stop word removed
+	print('stop word removal: ',stopword_removed(nlp,text))
+
+	# random selection
+	for ratio in [0.9,0.8,0.7,0.6,0.5]:
+		print('select_ratio ',ratio,': ',random_select(nlp,text,select_ratio=ratio))
+
+	#entity
+	tokens_list = get_token_entity(nlp,text,customized_tokens=[','])
+	print('entity: ',tokens_list)
+
+	# POS
+	print('Noun: ',get_tokens_POS(nlp,text,noun_list))
+	print('Verb: ',get_tokens_POS(nlp,text,verb_list))
+	print('Adjective: ',get_tokens_POS(nlp,text,adjective_list))
+	print('N+V: ',get_tokens_POS(nlp,text,noun_list+verb_list))
+	print('N+A: ',get_tokens_POS(nlp,text,noun_list+adjective_list))
+	print('V+A: ',get_tokens_POS(nlp,text,verb_list+adjective_list))
+	print('N+V+A: ',get_tokens_POS(nlp,text,noun_list+verb_list+adjective_list))
+
+	# dependency tree cutting
+	for cut in [1,2,3]:
+		res_toknes = get_token_dependency(nlp,text,cut)
+		print('cut: ',cut,res_toknes)
+
+	# triple
+	# print(nlp.word_tokenize(triple_text))
+
+nlp.close()
