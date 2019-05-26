@@ -108,10 +108,10 @@ def train_for_document_pair():
         "validation_split":[0.1],
     }
     # Set strategy here:
-    strategy = "stopword"
+    strategy = "random"
     token_select = TokenSelection(params)
     # process the dataset
-    train,test = token_select.get_train(dataset="factcheck",strategy=strategy,POS_category="Verb_Adjective")
+    train,test = token_select.get_train(dataset="factcheck",strategy=strategy,POS_category="Verb_Adjective",selected_ratio=0.9)
 
 #    val_uncontatenated = process.get_test()
     parameters= [arg for index,arg in enumerate(itertools.product(*grid_parameters.values())) if index%args.gpu_num==args.gpu]

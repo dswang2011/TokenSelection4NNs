@@ -288,49 +288,50 @@ def text2tokens_entity(nlp,text_list, customized_tokens=[]):
 		# print('text tokens:',text_tokens)
 	return tokens_list
 
-###### test #####
 
 
+if __name__ == '__main__':
 
-texts=["We were the No. 1 job creator in America in February and we are now the No. 4 job creator in the last year.",
-"Property owners in New York City will be fined $250,000 for using \"improper pronouns\" due to new transgender laws.",
-"Saudi Arabian Racehorse Executed for Being Homosexual",
-"Ellen DeGeneres Warning Justin Bieber To Get Help,",
-"President Obama fired Rear Admiral Rick Williams for \"questioning\" the President's purported recent purchase of a mansion in Dubai."]
+	###### test #####
+	texts=["We were the No. 1 job creator in America in February and we are now the No. 4 job creator in the last year.",
+	"Property owners in New York City will be fined $250,000 for using \"improper pronouns\" due to new transgender laws.",
+	"Saudi Arabian Racehorse Executed for Being Homosexual",
+	"Ellen DeGeneres Warning Justin Bieber To Get Help,",
+	"President Obama fired Rear Admiral Rick Williams for \"questioning\" the President's purported recent purchase of a mansion in Dubai."]
 
-nlp = StanfordCoreNLP(r'/home/dongsheng/data/resources/stanford-corenlp-full-2018-10-05')
+	nlp = StanfordCoreNLP(r'/home/dongsheng/data/resources/stanford-corenlp-full-2018-10-05')
 
-for text in texts:
-	print('=====================================')
-	# fulltext
-	print('fulltext: ',nlp.word_tokenize(text))
+	for text in texts:
+		print('=====================================')
+		# fulltext
+		print('fulltext: ',nlp.word_tokenize(text))
 
-	# stop word removed
-	print('stop word removal: ',stopword_removed(nlp,text))
+		# stop word removed
+		print('stop word removal: ',stopword_removed(nlp,text))
 
-	# random selection
-	for ratio in [0.9,0.8,0.7,0.6,0.5]:
-		print('select_ratio ',ratio,': ',random_select(nlp,text,select_ratio=ratio))
+		# random selection
+		for ratio in [0.9,0.8,0.7,0.6,0.5]:
+			print('select_ratio ',ratio,': ',random_select(nlp,text,select_ratio=ratio))
 
-	#entity
-	tokens_list = get_token_entity(nlp,text,customized_tokens=[','])
-	print('entity: ',tokens_list)
+		#entity
+		tokens_list = get_token_entity(nlp,text,customized_tokens=[','])
+		print('entity: ',tokens_list)
 
-	# POS
-	print('Noun: ',get_tokens_POS(nlp,text,noun_list))
-	print('Verb: ',get_tokens_POS(nlp,text,verb_list))
-	print('Adjective: ',get_tokens_POS(nlp,text,adjective_list))
-	print('N+V: ',get_tokens_POS(nlp,text,noun_list+verb_list))
-	print('N+A: ',get_tokens_POS(nlp,text,noun_list+adjective_list))
-	print('V+A: ',get_tokens_POS(nlp,text,verb_list+adjective_list))
-	print('N+V+A: ',get_tokens_POS(nlp,text,noun_list+verb_list+adjective_list))
+		# POS
+		print('Noun: ',get_tokens_POS(nlp,text,noun_list))
+		print('Verb: ',get_tokens_POS(nlp,text,verb_list))
+		print('Adjective: ',get_tokens_POS(nlp,text,adjective_list))
+		print('N+V: ',get_tokens_POS(nlp,text,noun_list+verb_list))
+		print('N+A: ',get_tokens_POS(nlp,text,noun_list+adjective_list))
+		print('V+A: ',get_tokens_POS(nlp,text,verb_list+adjective_list))
+		print('N+V+A: ',get_tokens_POS(nlp,text,noun_list+verb_list+adjective_list))
 
-	# dependency tree cutting
-	for cut in [1,2,3]:
-		res_toknes = get_token_dependency(nlp,text,cut)
-		print('cut: ',cut,res_toknes)
+		# dependency tree cutting
+		for cut in [1,2,3]:
+			res_toknes = get_token_dependency(nlp,text,cut)
+			print('cut: ',cut,res_toknes)
 
-	# triple
-	# print(nlp.word_tokenize(triple_text))
+		# triple
+		# print(nlp.word_tokenize(triple_text))
 
-nlp.close()
+	nlp.close()
