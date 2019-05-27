@@ -13,7 +13,7 @@ class BiLSTM(RNNBasic):
         text_branch = Sequential()
         embedding_layer = Embedding(len(opt.word_index) + 1,opt.embedding_dim,weights=[opt.embedding_matrix],input_length=opt.max_sequence_length,trainable=False)
         text_branch.add(embedding_layer)
-        text_branch.add(Dropout(self.opt.dropout_rate))
+        # text_branch.add(Dropout(self.opt.dropout_rate))
         # text_branch.add(TrigPosEmbedding(
         #     input_shape=(None,),
         #     output_dim=EMBEDDING_DIM,     # The dimension of embeddings.
