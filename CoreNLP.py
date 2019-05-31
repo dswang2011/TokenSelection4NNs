@@ -13,15 +13,15 @@ adjective_list = ['JJ','JJR','JJS']
 
 punctuations = [';','?',',','.',':']
 
-def get_tokens_POS(nlp,sentence,tag_list):
+def get_tokens_POS(nlp,sentence,tag_list,customized_tokens=[]):
 	token_tag_list = nlp.pos_tag(sentence)
 	res_tokens = []
 	for k,v in token_tag_list:
-		if v in tag_list or k in ['.','!','?',';']:
+		if v in tag_list or k in ['.','!','?',';'] or k.lower() in customized_tokens:
 			res_tokens.append(k)
 	return res_tokens
 # c(3,1)+c(3,2)+c(3,3) = 7 combinations
-def text2token_POS(nlp,text_list):
+def text2token_POS(nlp,text_list,customized_tokens=[]):
 	Noun=[]
 	Verb=[]
 	Adjective=[]
@@ -31,13 +31,13 @@ def text2token_POS(nlp,text_list):
 	Noun_Verb_Adjective=[]
 
 	for text in text_list:
-		Noun.append(get_tokens_POS(nlp,text,noun_list))
-		Verb.append(get_tokens_POS(nlp,text,verb_list))
-		Adjective.append(get_tokens_POS(nlp,text,adjective_list))
-		Noun_Verb.append(get_tokens_POS(nlp,text,noun_list+verb_list))
-		Noun_Adjective.append(get_tokens_POS(nlp,text,noun_list+adjective_list))
-		Verb_Adjective.append(get_tokens_POS(nlp,text,verb_list+adjective_list))
-		Noun_Verb_Adjective.append(get_tokens_POS(nlp,text,noun_list+verb_list+adjective_list))
+		Noun.append(get_tokens_POS(nlp,text,noun_list,customized_tokens))
+		Verb.append(get_tokens_POS(nlp,text,verb_list,customized_tokens))
+		Adjective.append(get_tokens_POS(nlp,text,adjective_list,customized_tokens))
+		Noun_Verb.append(get_tokens_POS(nlp,text,noun_list+verb_list,customized_tokens))
+		Noun_Adjective.append(get_tokens_POS(nlp,text,noun_list+adjective_list,customized_tokens))
+		Verb_Adjective.append(get_tokens_POS(nlp,text,verb_list+adjective_list,customized_tokens))
+		Noun_Verb_Adjective.append(get_tokens_POS(nlp,text,noun_list+verb_list+adjective_list,customized_tokens))
 	return [Noun,Verb,Adjective,Noun_Verb,Noun_Adjective,Verb_Adjective,Noun_Verb_Adjective]
 
 
@@ -90,7 +90,6 @@ def random_select(nlp,sentence,select_ratio=1.0):
     for i,word in enumerate(word_list):
         if random.random() < (total_select_count-len(selected_list)) / (total_count-i):
             selected_list.append(word)
-            
     return selected_list
 
 # random select 
@@ -190,7 +189,7 @@ def get_token_dependency(nlp,text,cut=0):
 		if len(sent.strip())<3:
 			continue
 		if len(sent)>500:
-			sent = sent[:450]
+			sent = sent[:495]
 		sent = sent+'.'
 		# build tree
 		layer2node_list = build_tree(nlp,sent)
@@ -217,7 +216,7 @@ def get_token_treecuts(nlp,text,cuts=[1,2,3]):
 		if len(sent.strip())<3:
 			continue
 		if len(sent)>500:
-			sent=sent[:480]
+			sent=sent[:495]
 		sent = sent+'.'
 		# build tree
 		layer2node_list = build_tree(nlp,sent)
@@ -245,7 +244,7 @@ def text2tokens_treecuts(nlp,text_list,cuts=[1,2,3]):
 	return tokens_dict_list
 
 
-# cut mean cutting lower layers, 0 means no cutting, 1 means cut one leaf layer, etc.
+# get token entity
 def get_token_entity(nlp,text,customized_tokens=[]):
 	text_tokens = []
 	sentences = re.split('[.|?|!]',text)
@@ -253,7 +252,7 @@ def get_token_entity(nlp,text,customized_tokens=[]):
 		if len(sent.strip())<4:
 			continue
 		if len(sent)>500:
-			sent=sent[:480]
+			sent=sent[:495]
 		sent = sent+'.'
 		# build tree
 		layer2node_list = build_tree(nlp,sent)
@@ -265,11 +264,32 @@ def get_token_entity(nlp,text,customized_tokens=[]):
 		index = 0
 		for token,tag in token_tag_list:
 			index +=1
-			if tag != 'O':
+			if tag != 'O' or token.lower() in customized_tokens:
 				entities.append(index)
 		picked_tokens = tree_pick(layer2node_list,nlp,sent,entities)
 		if '.' not in picked_tokens:
 			picked_tokens.append('.')
+		text_tokens+=picked_tokens
+	return text_tokens
+
+# get token entity
+def get_token_block_tree(nlp,text,top_K_tokens=[],customized_tokens=[]):
+	text_tokens = []
+	sentences = re.split('[.|?|!]',text)
+	for sent in sentences:
+		if len(sent.strip())<4:
+			continue
+		if len(sent)>500:
+			sent=sent[:495]
+		sent = sent+'.'
+		# build tree
+		layer2node_list = build_tree(nlp,sent)
+		# tree pickup
+		print('selected tokens:',top_K_tokens+customized_tokens)
+		picked_tokens = tree_pick(layer2node_list,nlp,sent,top_K_tokens+customized_tokens)
+		if '.' not in picked_tokens:
+			picked_tokens.append('.')
+
 		text_tokens+=picked_tokens
 	return text_tokens
 
@@ -288,50 +308,107 @@ def text2tokens_entity(nlp,text_list, customized_tokens=[]):
 		# print('text tokens:',text_tokens)
 	return tokens_list
 
+# get idf dict
+from sklearn.feature_extraction.text import TfidfVectorizer
+def get_idf_dict(text_list):
+	vectorizer = TfidfVectorizer()
+	X = vectorizer.fit_transform(text_list)
+	idf = vectorizer.idf_
+	return dict(zip(vectorizer.get_feature_names(), idf))
+
+# rank tokens
+def rank_tokens(nlp,text,idf_dict):
+	word2idf = {}
+	word_list = nlp.word_tokenize(text)
+	stop_words = set(stopwords.words('english'))
+	for word in word_list:
+		word = word.lower()
+		if word not in idf_dict or word in stop_words:
+			continue
+		word2idf[word]=idf_dict[word]
+	# rank dict
+	sorted_x = sorted(word2idf.items(), key=lambda kv:kv[1],reverse=True)
+	return sorted_x
+
+
+# 1. text 2 tokens, blocks, 
+def text2tokens_blocks_tree(nlp,text_list,sig_num,customized_tokens=[]):
+	idf_dict = get_idf_dict(text_list)
+
+	tokens_list = []
+	i=0
+	print('text_list_size:',len(text_list))
+	print('blocks selection takes time, we will print the process below:')
+	for text in text_list:
+		# get top K
+		sorted_tokens = rank_tokens(nlp,text,idf_dict)
+		print(len(sorted_tokens),' : ',sig_num)
+		range_num = np.minimum(len(sorted_tokens),sig_num)
+		top_K_tokens = [sorted_tokens[i][0] for i in range(range_num)]
+		print('top k:',top_K_tokens)
+		# pick the block
+		text_tokens = get_token_block_tree(nlp,text,top_K_tokens,customized_tokens)
+		tokens_list.append(text_tokens)
+		i+=1
+		if i%50==0:
+			print('processed:',i,'/',len(text_list))
+		# print('text tokens:',text_tokens)
+	return tokens_list
+
 
 
 if __name__ == '__main__':
 
 	###### test #####
-	texts=["We were the No. 1 job creator in America in February and we are now the No. 4 job creator in the last year.",
+	texts=["Unique",
+	"A simple test. haha ",
+	"We were the No. 1 job creator in America in February and we are now the No. 4 job creator in the last year.",
 	"Property owners in New York City will be fined $250,000 for using \"improper pronouns\" due to new transgender laws.",
 	"Saudi Arabian Racehorse Executed for Being Homosexual",
 	"Ellen DeGeneres Warning Justin Bieber To Get Help,",
-	"President Obama fired Rear Admiral Rick Williams for \"questioning\" the President's purported recent purchase of a mansion in Dubai."]
+	"President Obama fired Rear Admiral Rick Williams for \"questioning\" the President's purported recent purchase of a mansion in Dubai.",
+	"MacKenzie studied with Bernard Leach from 1949 to 1952. His simple, wheel-thrown functional pottery is heavily influenced by the oriental aesthetic of Shoji Hamada and Kan-jiro Kawai."
+	]
 
 	nlp = StanfordCoreNLP(r'/home/dongsheng/data/resources/stanford-corenlp-full-2018-10-05')
 
-	for text in texts:
+	for txt in texts:
 		print('=====================================')
 		# fulltext
-		print('fulltext: ',nlp.word_tokenize(text))
+		print('fulltext: ',nlp.word_tokenize(txt))
 
-		# stop word removed
-		print('stop word removal: ',stopword_removed(nlp,text))
+		# # stop word removed
+		# print('stop word removal: ',stopword_removed(nlp,txt))
 
-		# random selection
-		for ratio in [0.9,0.8,0.7,0.6,0.5]:
-			print('select_ratio ',ratio,': ',random_select(nlp,text,select_ratio=ratio))
+		# # random selection
+		# for ratio in [0.9,0.8,0.7,0.6,0.5]:
+		# 	print('select_ratio ',ratio,': ',random_select(nlp,txt,select_ratio=ratio))
 
-		#entity
-		tokens_list = get_token_entity(nlp,text,customized_tokens=[','])
-		print('entity: ',tokens_list)
+		# #entity
+		# tokens_list = get_token_entity(nlp,txt,customized_tokens=[','])
+		# print('entity: ',tokens_list)
 
-		# POS
-		print('Noun: ',get_tokens_POS(nlp,text,noun_list))
-		print('Verb: ',get_tokens_POS(nlp,text,verb_list))
-		print('Adjective: ',get_tokens_POS(nlp,text,adjective_list))
-		print('N+V: ',get_tokens_POS(nlp,text,noun_list+verb_list))
-		print('N+A: ',get_tokens_POS(nlp,text,noun_list+adjective_list))
-		print('V+A: ',get_tokens_POS(nlp,text,verb_list+adjective_list))
-		print('N+V+A: ',get_tokens_POS(nlp,text,noun_list+verb_list+adjective_list))
+		# # POS
+		# print('Noun: ',get_tokens_POS(nlp,txt,noun_list))
+		# print('Verb: ',get_tokens_POS(nlp,txt,verb_list))
+		# print('Adjective: ',get_tokens_POS(nlp,txt,adjective_list))
+		# print('N+V: ',get_tokens_POS(nlp,txt,noun_list+verb_list))
+		# print('N+A: ',get_tokens_POS(nlp,txt,noun_list+adjective_list))
+		# print('V+A: ',get_tokens_POS(nlp,txt,verb_list+adjective_list))
+		# print('N+V+A: ',get_tokens_POS(nlp,txt,noun_list+verb_list+adjective_list))
 
-		# dependency tree cutting
-		for cut in [1,2,3]:
-			res_toknes = get_token_dependency(nlp,text,cut)
-			print('cut: ',cut,res_toknes)
+		# # dependency tree cutting
+		# for cut in [1,2,3]:
+		# 	res_toknes = get_token_dependency(nlp,txt,cut)
+		# 	print('cut: ',cut,res_toknes)
 
 		# triple
 		# print(nlp.word_tokenize(triple_text))
+
+		# token blocks selection
+		# idf_dict = get_idf_dict(texts)
+	# outside the loop, token block selection
+	text2tokens = text2tokens_blocks_tree(nlp,texts,sig_num=3,customized_tokens=['aaac','bbbc'])
+	print(text2tokens)
 
 	nlp.close()

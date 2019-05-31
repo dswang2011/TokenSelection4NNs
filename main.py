@@ -45,13 +45,13 @@ def train_for_document():
     # }
     # fix cell typ,a nd try different RNN models
     # grid_parameters ={
-    #     "cell_type":["gru"], 
+    #     "cell_type":["gru"],
     #     "hidden_unit_num":[50],
     #     "dropout_rate" : [0.2],#,0.5,0.75,0.8,1]    ,
     #     "model": [ "bilstm"],
     #     # "contatenate":[0],
     #     "lr":[0.001],
-    #     "batch_size":[64],
+    #     "batch_size":[32,64],
     #     # "validation_split":[0.05,0.1,0.15,0.2],
     #     "validation_split":[0.1],
     # }
@@ -61,25 +61,43 @@ def train_for_document():
         "model": ["cnn"],
         "filter_size":[30,50],
         "lr":[0.001],
-        "batch_size":[64],
+        "batch_size":[32,64],
         # "validation_split":[0.05,0.1,0.15,0.2],
         "validation_split":[0.1],
     }
 
+    datasets = ["GAP", "IMDB"]
+
     # Set strategy here: strategy = fulltext, stopword, random, POS, dependency, entity ;
-    strategy = "fulltext"
+    #if strategy="POS", then POS_category works, possible value: "Noun", "Verb", "Adjective", "Noun_Verb", "Noun_Adjective", "Verb_Adjective", "Noun_Verb_Adjective".
+    #
+    # POS_category = ["Noun", "Verb", "Adjective", "Noun_Verb", "Noun_Adjective", "Verb_Adjective", "Noun_Verb_Adjective"]
+    # selected_ratio = [0.9,0.8,0.7,0.6,0.5]
+    # cut = [1,2,3]
+    # dict_strategies = {"POS":{},
+    #                    "fulltext":{},
+    #                    "stopword":{},
+    #                    "random":{},
+    #                    "dependency":{},
+    #                    "entity":{}
+    #                    }
+    # for strategy in dict_strategies:
+    #     if strategy == "POS":
+    #
+    strategy = "GAP"
+
     token_select = TokenSelection(params)
     # train,test = token_select.get_train(dataset="IMDB",strategy="entity",selected_ratio=0.5,POS_category="Noun_Verb",cut=2)
-    train,test = token_select.get_train(dataset="GAP",strategy=strategy,selected_ratio=0.8,POS_category="Noun_Verb",cut=2)
+    train,test = token_select.get_train(dataset="GAP",strategy=strategy,selected_ratio=0.8,POS_category="Noun_Verb_Adjective",cut=1)
     # train = token_select.get_train(dataset="IMDB",strategy="entity",selected_ratio=0.8,POS_category="Verb_Adjective",cut=1)
     # X,y = train[0]
     # X,y = shuffle(X, y, random_state=0)
-   
+
 #    val_uncontatenated = process.get_test()
     parameters= [arg for index,arg in enumerate(itertools.product(*grid_parameters.values())) if index%args.gpu_num==args.gpu]
     for parameter in parameters:
         print(parameter)
-        params.setup(zip(grid_parameters.keys(),parameter))   
+        params.setup(zip(grid_parameters.keys(),parameter))
         model = models.setup(params)
         start = time.time()
         model.train(train,dev=test, strategy=strategy) ### strategy here is just for printing the type
@@ -126,8 +144,8 @@ def train_for_document_pair():
         draw_result(predicted,test[1])
 
 if __name__ == '__main__':
-    train_for_document_pair()
-    # train_for_document()
+    # train_for_document_pair()
+    train_for_document()
 
 
     

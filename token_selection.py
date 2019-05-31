@@ -152,7 +152,8 @@ class TokenSelection(object):
 		else:
 			texts,labels = data_reader.load_classification_data(file_path,hasHead=0)	# set with 1 if there is head
 			print(texts[0],' 2:',' label:',labels[0],'[end_label]')
-
+		# customized 
+		customized_tokens = ['aaac','bbbc','pppc','pppcs']
 		# full text
 		fulltext_pkl = output_root+file_name+"_fulltext.pkl"
 		if not os.path.exists(fulltext_pkl):
@@ -194,6 +195,7 @@ class TokenSelection(object):
 			print('shape:',tokens_list.shape)
 		else:
 			print("Already exist:",stopword_pkl)
+
 		# random
 		for selected_ratio in [0.9,0.8,0.7,0.6,0.5]:
 			random_pkl = output_root+file_name+"_random"+str(selected_ratio)+".pkl"
@@ -211,9 +213,9 @@ class TokenSelection(object):
 		# POS combination
 		pos_pkl = output_root+file_name+"_pos.pkl"
 		if not os.path.exists(pos_pkl):
-			Noun,Verb,Adjective,Noun_Verb,Noun_Adjective,Verb_Adjective,Noun_Verb_Adjective = CoreNLP.text2token_POS(nlp,texts)
+			Noun,Verb,Adjective,Noun_Verb,Noun_Adjective,Verb_Adjective,Noun_Verb_Adjective = CoreNLP.text2token_POS(nlp,texts,customized_tokens)
 			if dataset in self.opt.pair_set.split(","):
-				Noun1,Verb1,Adjective1,Noun_Verb1,Noun_Adjective1,Verb_Adjective1,Noun_Verb_Adjective1 = CoreNLP.text2token_POS(nlp,texts2)
+				Noun1,Verb1,Adjective1,Noun_Verb1,Noun_Adjective1,Verb_Adjective1,Noun_Verb_Adjective1 = CoreNLP.text2token_POS(nlp,texts2,customized_tokens)
 				# 1-> 8 (0->7)
 				pickle.dump([Noun,Verb,Adjective,Noun_Verb,Noun_Adjective,Verb_Adjective,Noun_Verb_Adjective,
 							 Noun1,Verb1,Adjective1,Noun_Verb1,Noun_Adjective1,Verb_Adjective1,Noun_Verb_Adjective1,labels],open(pos_pkl, 'wb'))
@@ -225,7 +227,7 @@ class TokenSelection(object):
 			print("Already exist:",pos_pkl)
 			# print('each with shape:',np.array(Noun).shape)
 
-#		 dependency tree different cuts
+#dependency tree different cuts
 		cuts = [1,2,3]
 		exists=[]
 		for cut in cuts:
@@ -267,10 +269,24 @@ class TokenSelection(object):
 		# entity + tree selection 
 		entity_pkl = output_root+file_name+"_entity.pkl"
 		if not os.path.exists(entity_pkl):
-			tokens_list = CoreNLP.text2tokens_entity(nlp,texts)
+			tokens_list = CoreNLP.text2tokens_entity(nlp,texts,customized_tokens)
 			if dataset in self.opt.pair_set.split(","):
-				tokens_list1 = CoreNLP.text2tokens_entity(nlp,texts2)
+				tokens_list1 = CoreNLP.text2tokens_entity(nlp,texts2,customized_tokens)
 				pickle.dump([[tokens_list,tokens_list1],labels],open(entity_pkl, 'wb'))
+			else:
+				pickle.dump([tokens_list,labels],open(entity_pkl, 'wb'))
+			print('output succees:',entity_pkl)
+			print('shape:',np.array(tokens_list).shape)
+		else:
+			print("Already exists:",entity_pkl)
+			
+		# IDF 
+		idf_pkl = output_root+file_name+"_idf.pkl"
+		if not os.path.exists(idf_pkl):
+			idf_dict = CoreNLP.get_idf_dict(texts)
+			if dataset in self.opt.pair_set.split(","):
+				idf_dict2 = CoreNLP.get_idf_dict(texts2)
+				pickle.dump([[idf_dict,idf_dict1],labels],open(idf_pkl, 'wb'))
 			else:
 				pickle.dump([tokens_list,labels],open(entity_pkl, 'wb'))
 			print('output succees:',entity_pkl)
@@ -291,17 +307,17 @@ if __name__ == '__main__':
 	token_select = TokenSelection(params)
 
 	# # token selection
-	# nlp = StanfordCoreNLP(params.corenlp_root)
+	nlp = StanfordCoreNLP(params.corenlp_root)
 	# # below is where you need to set your data name
-	# token_select.token_selection_preparation(nlp = nlp, dataset="factcheck",file_name="train.csv")
-	# # token_select.token_selection_preparation(nlp = nlp, dataset="factcheck",file_name="test.csv")
-	# nlp.close() # Do not forget to close! The backend server will consume a lot memery.
+	token_select.token_selection_preparation(nlp = nlp, dataset="GAP",file_name="train.csv")
+	token_select.token_selection_preparation(nlp = nlp, dataset="GAP",file_name="test.csv")
+	nlp.close() # Do not forget to close! The backend server will consume a lot memery.
 
 	# test output some data
-	train,test = token_select.get_train("IMDB",strategy="fulltext",selected_ratio=0.9,cut=1,POS_category="Noun")
-	test_x = test[0]
-	test_y = test[1]
-	for i in range(2):
-		print(test_x[i],' -> ',test_y[i],'\n')
+	# train,test = token_select.get_train("IMDB",strategy="fulltext",selected_ratio=0.9,cut=1,POS_category="Noun")
+	# test_x = test[0]
+	# test_y = test[1]
+	# for i in range(2):
+	# 	print(test_x[i],' -> ',test_y[i],'\n')
 
 

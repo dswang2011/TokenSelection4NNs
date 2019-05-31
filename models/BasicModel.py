@@ -2,11 +2,24 @@
 # -*- coding: utf-8 -*-
 from keras import optimizers
 import os
+import keras
+import time
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.models import Model, Input, model_from_json, load_model, Sequential
 from keras import backend as K
 from keras.layers import Layer,Dense, Concatenate
 from models.matching import Attention,getOptimizer,precision_batch,identity_loss,MarginLoss,Cosine
+
+class TimeHistory(keras.callbacks.Callback):
+    def on_train_begin(self, logs={}):
+        self.times = []
+
+    def on_epoch_begin(self, batch, logs={}):
+        self.epoch_time_start = time.time()
+
+    def on_epoch_end(self, batch, logs={}):
+        self.times.append(time.time() - self.epoch_time_start)
+
 class BasicModel(object):
     def __init__(self,opt): 
         self.opt=opt
@@ -20,18 +33,21 @@ class BasicModel(object):
     
     def train(self,train,dev=None,dirname="saved_model",strategy=None):
         x_train,y_train = train
-        
-        
+
+        time_callback = TimeHistory()
+
         filename = os.path.join( dirname,  "best_model_" + self.__class__.__name__+".h5" )
         callbacks = [EarlyStopping(monitor='val_loss', patience=5),
-             ModelCheckpoint(filepath=filename, monitor='val_loss', save_best_only=True)]
+             ModelCheckpoint(filepath=filename, monitor='val_loss', save_best_only=True), time_callback]
         if dev is None:
             history = self.model.fit(x_train,y_train,batch_size=self.opt.batch_size,epochs=self.opt.epoch_num,callbacks=callbacks,validation_split=self.opt.validation_split,shuffle=True)
         else:
             x_val, y_val = dev
             history = self.model.fit(x_train,y_train,batch_size=self.opt.batch_size,epochs=self.opt.epoch_num,callbacks=callbacks,validation_data=(x_val, y_val),shuffle=True) 
         print('strategy:',strategy,' on model:',self.__class__.__name__)
-        print('history:',str(min(history.history["acc"])))
+        print('history:',str(max(history.history["val_acc"])))
+        times = time_callback.times
+        print("times:", round(times[1],3), "s")
         os.rename(filename,os.path.join( dirname,  str(min(history.history["acc"]))+"_"+strategy+"_" + self.__class__.__name__+"_"+self.opt.to_string()+".h5" ))
         
        
