@@ -283,16 +283,16 @@ class TokenSelection(object):
 		# IDF 
 		idf_pkl = output_root+file_name+"_idf.pkl"
 		if not os.path.exists(idf_pkl):
-			idf_dict = CoreNLP.get_idf_dict(texts)
 			if dataset in self.opt.pair_set.split(","):
-				idf_dict2 = CoreNLP.get_idf_dict(texts2)
-				pickle.dump([[idf_dict,idf_dict1],labels],open(idf_pkl, 'wb'))
+				idf_dict = CoreNLP.get_idf_dict(texts2)
+				pickle.dump(idf_dict,open(idf_pkl, 'wb'))
 			else:
-				pickle.dump([tokens_list,labels],open(entity_pkl, 'wb'))
-			print('output succees:',entity_pkl)
-			print('shape:',np.array(tokens_list).shape)
+				idf_dict = CoreNLP.get_idf_dict(texts)
+				pickle.dump(idf_dict,open(idf_pkl, 'wb'))
+			print('output succees:',idf_pkl)
+			print('shape:',np.array(idf_dict).shape)
 		else:
-			print("Already exists:",entity_pkl)
+			print("Already exists:",idf_pkl)
 
 # prepare the tokens list into pkl files.
 if __name__ == '__main__':
