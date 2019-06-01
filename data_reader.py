@@ -276,22 +276,22 @@ def load_data(tsv_file_path,mode= "train"):
     return np.array(res)
 
 import csv
-#### uncomment this to use for the IMDB dataset ##########
-# def load_classification_data(file_path,hasHead=0):
-# 	texts=[]
-# 	labels=[]
-# 	with open(file_path, encoding='utf8') as f:
-# 		csv_reader = csv.reader(f, delimiter='\t')
-# 		for row in csv_reader:
-# 			texts.append(row[0].strip())
-# 			label = '0'
-# 			for i in range(1,len(row)):
-# 				if row[i].strip() in ['0','1']:
-# 					label = row[i].strip()
-# 			labels.append(label)
-# 	# print('labels:',labels)
-#
-# 	return [texts,labels]
+### uncomment this to use for the IMDB/MR dataset ##########
+def load_bi_class_data(file_path,hasHead=0):
+	texts=[]
+	labels=[]
+	with open(file_path, encoding='utf8') as f:
+		csv_reader = csv.reader(f, delimiter='\t')
+		for row in csv_reader:
+			texts.append(row[0].strip())
+			label = '0'
+			for i in range(1,len(row)):
+				if row[i].strip() in ['0','1']:
+					label = row[i].strip()
+			labels.append(label)
+	# print('labels:',labels)
+
+	return [texts,labels]
 
 #### THIS IS TO RUN FOR GAP ######
 def load_classification_data(file_path,hasHead=0):
@@ -365,6 +365,19 @@ def load_mr_data(folder):
 	labels = pos_labels.tolist()+neg_labels.tolist()
 	X,y = shuffle(texts, labels, random_state=0)
 	return [X,y]
+
+
+def load_data_overall(dataset,file_name="train.csv"):
+	output_root = "prepared/"+dataset+"/"
+	if dataset in ['GAP']:
+		texts,labels = load_classification_data(file_path=output_root+file_name)
+	elif dataset in ['MR','IMDB']:
+		texts,labels = load_bi_class_data()
+	elif dataset in ['factcheck']:
+		texts1,texts2,labels = load_pair_data(file_path = output_root+file_name)
+		return texts1,texts2,labels
+	return texts,labels
+
 # Process MR 
 # def write_content(file_path,content):
 # 	with open(file_path,'a',encoding='utf8') as fw:

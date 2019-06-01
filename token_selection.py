@@ -26,13 +26,13 @@ class TokenSelection(object):
 				embedding_matrix[i] = embedding_vector
 		return embedding_matrix
 
-	# strategy = fulltext, stopword, random, POS, dependency ;
+	# strategy = fulltext, stopword, random, POS, dependency , IDF, 
 	def get_train(self,dataset,strategy="fulltext",selected_ratio=0.9,cut=1,POS_category="Noun"):
 		print('=====strategy:',strategy,'pos_cat:',POS_category,' cut:',cut,'======')
 		tokens_list_train_test = []
 		labels_train_test = []
 		for file_name in ["train.csv","test.csv"]:
-#	   for file_name in [self.opt.train_file,self.opt.test_file]:
+# for file_name in [self.opt.train_file,self.opt.test_file]:
 			if strategy=="POS":
 				if dataset in self.opt.pair_set.split(","):
 					Noun,Verb,Adjective,Noun_Verb,Noun_Adjective,Verb_Adjective,Noun_Verb_Adjective,
@@ -67,8 +67,13 @@ class TokenSelection(object):
 						tokens_list=np.array(Verb_Adjective)
 					elif POS_category=="Noun_Verb_Adjective":
 						tokens_list=np.array(Noun_Verb_Adjective)
+			elif strategy="IDF":
+				if dataset in self.opt.pair_set.split(","):
+					tokens_list1,tokens_list2,labels = get_selected_token(dataset,file_name,strategy,selected_ratio=selected_ratio,cut)
+				else:
+					tokens_list,labels = get_selected_token(dataset,file_name,strategy,selected_ratio=selected_ratio,cut)
 			else:
-				tokens_list,labels = self.get_selected_token(dataset,file_name,strategy,selected_ratio,cut) 
+				tokens_list,labels = self.get_selected_token(dataset,file_name,strategy,selected_ratio=selected_ratio,cut) 
 			tokens_list_train_test.append(tokens_list)
 			labels_train_test.append(labels)
 		self.opt.nb_classes = len(set(labels))
@@ -107,7 +112,8 @@ class TokenSelection(object):
 		return train_test
 
 	# strategy = fulltext, stopword, random, POS, dependency;
-	def get_selected_token(self,dataset,file_name,strategy="random",selected_ratio=0.9,cut=1):
+	def get_selected_token(self,dataset,file_name,strategy,selected_ratio=0.9,cut=1):
+		customized_tokens = ['aaac','bbbc','pppc','pppcs']
 		output_root = "prepared/"+dataset+"/"
 		if strategy == "fulltext":
 			pkl_file_path = output_root+file_name+"_fulltext.pkl"
@@ -132,10 +138,22 @@ class TokenSelection(object):
 			pkl_file_path = output_root+file_name+"_treecut"+str(cut)+".pkl"
 		elif strategy == "entity":
 			pkl_file_path = output_root+file_name+"_entity.pkl"
+		elif strategy="IDF":
+			if file_name = 'train.csv':
+				self.idf_dict = self.get_idf_dict(texts)
+			if dataset in self.opt.pair_set.split(","):
+				texts1,texts2,labels = load_data_overall(dataset,file_name)
+				tokens_list1=CoreNLP.text2tokens_idf(texts1,self.idf_dict,customized_tokens,select_ratio=selected_ratio)
+				tokens_list2=CoreNLP.text2tokens_idf(texts2,self.idf_dict,customized_tokens,select_ratio=selected_ratio)
+				return tokens_list1,tokens_list2,labels
+			else:
+				texts,labels = load_data_overall(dataset,file_name) 
+				tokens_list=CoreNLP.text2tokens_idf(texts,self.idf_dict,customized_tokens,select_ratio=selected_ratio)
+				return tokens_list,labels
 		# return the lists, labels
 		temp = pickle.load(open(pkl_file_path,'rb'))
-		token_lists,labels = temp[0],temp[1]
-		return token_lists,labels
+		tokens_list,labels = temp[0],temp[1]
+		return tokens_list,labels
 
 	# If the data is prepared/IMDB/train.txt => dataset=IMDB, file_name=train.txt
 	def token_selection_preparation(self,nlp,dataset,file_name):
@@ -293,6 +311,7 @@ class TokenSelection(object):
 			print('shape:',np.array(idf_dict).shape)
 		else:
 			print("Already exists:",idf_pkl)
+
 
 # prepare the tokens list into pkl files.
 if __name__ == '__main__':

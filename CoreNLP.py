@@ -48,6 +48,20 @@ def text2tokens_fulltext(nlp,text_list):
 		tokens_list.append(nlp.word_tokenize(text))
 	return np.array(tokens_list)
 
+# full text
+def text2tokens_idf(text_list,idf_dict,customized_tokens,select_ratio):
+	tokens_list = []
+	select_num = int(len(idf_dict)*select_ratio)
+	top_idf_list = [idf_dict[i][0] for i in range(select_num)]
+	for text in text_list:
+		select_tokens = []
+		tokens = nltk.word_tokenize(text)
+		for tok in tokens:
+			if tok in top_idf_list or tok in customized_tokens:
+				select_tokens.append(tok)
+		tokens_list.append(select_tokens)
+	return np.array(tokens_list)
+
 	
 # tree Node
 class Node(object):
@@ -184,19 +198,24 @@ def tree_cut(layer2node_list,nlp,sentence,cut):
 # cut mean cutting lower layers, 0 means no cutting, 1 means cut one leaf layer, etc.
 def get_token_dependency(nlp,text,cut=0):
 	text_tokens=[]
-	sentences = re.split('[.!?]',text)
+	# sentences = re.split('[.!?]',text)
+	sentences = nltk.sent_tokenize(text)
 	for sent in sentences:
 		if len(sent.strip())<3:
 			continue
-		if len(sent)>500:
-			sent = sent[:495]
-		sent = sent+'.'
+		if len(sent)>600:
+			sent = sent[:595]
+		# end punctuation
+		end_punctuation = sent.strip()[-1]
+		if end_punctuation not in ['.','!','?']:
+			end_punctuation='.'
+			sent = sent + end_punctuation
 		# build tree
 		layer2node_list = build_tree(nlp,sent)
 		# cut tree
 		sent_tokens = tree_cut(layer2node_list,nlp,sent,cut)
-		if '.' not in sent_tokens:
-			sent_tokens+=['.']
+		if end_punctuation not in sent_tokens:
+			sent_tokens+=[end_punctuation]
 		text_tokens+=sent_tokens
 
 	return text_tokens
@@ -211,13 +230,18 @@ def text2tokens_dependency(nlp,text_list,cut=1):
 # cut mean cutting lower layers, 0 means no cutting, 1 means cut one leaf layer, etc.
 def get_token_treecuts(nlp,text,cuts=[1,2,3]):
 	text_tokens={}
-	sentences = re.split('[.|?|!]',text)
+	# sentences = re.split('[.|?|!]',text)
+	sentences = nltk.sent_tokenize(text)
 	for sent in sentences:
 		if len(sent.strip())<3:
 			continue
-		if len(sent)>500:
-			sent=sent[:495]
-		sent = sent+'.'
+		if len(sent)>600:
+			sent=sent[:595]
+		# end punctuation
+		end_punctuation = sent.strip()[-1]
+		if end_punctuation not in ['.','!','?']:
+			end_punctuation='.'
+			sent = sent + end_punctuation
 		# build tree
 		layer2node_list = build_tree(nlp,sent)
 		# cut tree
@@ -225,8 +249,8 @@ def get_token_treecuts(nlp,text,cuts=[1,2,3]):
 			if cut not in text_tokens.keys():
 				text_tokens[cut]=[]
 			sent_tokens = tree_cut(layer2node_list,nlp,sent,cut)
-			if '.' not in sent_tokens:
-				sent_tokens+=['.']
+			if end_punctuation not in sent_tokens:
+				sent_tokens+=[end_punctuation]
 			text_tokens[cut]+=sent_tokens
 	return text_tokens
 # text2tokens dependency
@@ -247,13 +271,18 @@ def text2tokens_treecuts(nlp,text_list,cuts=[1,2,3]):
 # get token entity
 def get_token_entity(nlp,text,customized_tokens=[]):
 	text_tokens = []
-	sentences = re.split('[.|?|!]',text)
+	# sentences = re.split('[.|?|!]',text)
+	sentences = nltk.sent_tokenize(text)
 	for sent in sentences:
 		if len(sent.strip())<4:
 			continue
-		if len(sent)>500:
-			sent=sent[:495]
-		sent = sent+'.'
+		if len(sent)>600:
+			sent=sent[:595]
+		# end punctuation
+		end_punctuation = sent.strip()[-1]
+		if end_punctuation not in ['.','!','?']:
+			end_punctuation='.'
+			sent = sent + end_punctuation
 		# build tree
 		layer2node_list = build_tree(nlp,sent)
 		# tree pickup
@@ -267,28 +296,33 @@ def get_token_entity(nlp,text,customized_tokens=[]):
 			if tag != 'O' or token.lower() in customized_tokens:
 				entities.append(index)
 		picked_tokens = tree_pick(layer2node_list,nlp,sent,entities)
-		if '.' not in picked_tokens:
-			picked_tokens.append('.')
+		if end_punctuation not in picked_tokens:
+			picked_tokens.append(end_punctuation)
 		text_tokens+=picked_tokens
 	return text_tokens
 
 # get token entity
 def get_token_block_tree(nlp,text,top_K_tokens=[],customized_tokens=[]):
 	text_tokens = []
-	sentences = re.split('[.|?|!]',text)
+	# sentences = re.split('[.|?|!]',text)
+	sentences = nltk.sent_tokenize(text)
 	for sent in sentences:
 		if len(sent.strip())<4:
 			continue
-		if len(sent)>500:
-			sent=sent[:495]
-		sent = sent+'.'
+		if len(sent)>600:
+			sent=sent[:595]
+		# end punctuation
+		end_punctuation = sent.strip()[-1]
+		if end_punctuation not in ['.','!','?']:
+			end_punctuation='.'
+			sent = sent + end_punctuation
 		# build tree
 		layer2node_list = build_tree(nlp,sent)
 		# tree pickup
 		print('selected tokens:',top_K_tokens+customized_tokens)
 		picked_tokens = tree_pick(layer2node_list,nlp,sent,top_K_tokens+customized_tokens)
-		if '.' not in picked_tokens:
-			picked_tokens.append('.')
+		if end_punctuation not in picked_tokens:
+			picked_tokens.append(end_punctuation)
 
 		text_tokens+=picked_tokens
 	return text_tokens
