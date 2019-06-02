@@ -351,9 +351,12 @@ def get_idf_dict(text_list):
 	return dict(zip(vectorizer.get_feature_names(), idf))
 
 # rank tokens
-def rank_tokens(nlp,text,idf_dict):
+def rank_tokens(nlp,text,idf_dict,pos_only=False):
 	word2idf = {}
-	word_list = nlp.word_tokenize(text)
+	if pos_only == True:
+		word_list = get_tokens_POS(nlp,text,noun_list+verb_list+adjective_list)
+	else:
+		word_list = nlp.word_tokenize(text)
 	stop_words = set(stopwords.words('english'))
 	for word in word_list:
 		word = word.lower()
@@ -365,30 +368,61 @@ def rank_tokens(nlp,text,idf_dict):
 	return sorted_x
 
 
-# 1. text 2 tokens, blocks, 
-def text2tokens_blocks_tree(nlp,text_list,sig_num,customized_tokens=[]):
-	idf_dict = get_idf_dict(text_list)
+# # 1. text 2 tokens, blocks, 
+# def text2tokens_blocks_tree(nlp,text_list,sig_num,customized_tokens=[],idf_dict=None,pos_only=False):
+# 	if idf_dict==None:
+# 		idf_dict = get_idf_dict(text_list)
+# 	tokens_list = []
+# 	i=0
+# 	print('text_list_size:',len(text_list))
+# 	print('blocks selection takes time, we will print the process below:')
+# 	for text in text_list:
+# 		# get top K
+# 		sorted_tokens = rank_tokens(nlp,text,idf_dict,pos_only=pos_only)
+# 		print(len(sorted_tokens),' : ',sig_num)
+# 		range_num = np.minimum(len(sorted_tokens),sig_num)
+# 		top_K_tokens = [sorted_tokens[i][0] for i in range(range_num)]
+# 		print('top k:',top_K_tokens)
+# 		# pick the block
+# 		text_tokens = get_token_block_tree(nlp,text,top_K_tokens,customized_tokens)
+# 		tokens_list.append(text_tokens)
+# 		i+=1
+# 		if i%50==0:
+# 			print('processed:',i,'/',len(text_list))
+# 		# print('text tokens:',text_tokens)
+# 	return tokens_list
 
+# 1. text 2 tokens, blocks, 
+def text2tokens_blocks_tree(nlp,text_list,sig_num,customized_tokens=[],idf_dict=None):
+	if idf_dict==None:
+		idf_dict = get_idf_dict(text_list)
 	tokens_list = []
+	tokens_list_pos=[]
 	i=0
 	print('text_list_size:',len(text_list))
 	print('blocks selection takes time, we will print the process below:')
 	for text in text_list:
 		# get top K
-		sorted_tokens = rank_tokens(nlp,text,idf_dict)
-		print(len(sorted_tokens),' : ',sig_num)
+		sorted_tokens = rank_tokens(nlp,text,idf_dict,pos_only=False)
+		sorted_tokens_POS_only = rank_tokens(nlp,text,idf_dict,pos_only=True)
+		# 1) IDF blocks
 		range_num = np.minimum(len(sorted_tokens),sig_num)
 		top_K_tokens = [sorted_tokens[i][0] for i in range(range_num)]
-		print('top k:',top_K_tokens)
 		# pick the block
 		text_tokens = get_token_block_tree(nlp,text,top_K_tokens,customized_tokens)
 		tokens_list.append(text_tokens)
+		# 2) IDF+POS filter
+		range_num = np.minimum(len(sorted_tokens_POS_only),sig_num)
+		top_K_tokens = [sorted_tokens_POS_only[i][0] for i in range(range_num)]
+		# pick the block
+		text_tokens = get_token_block_tree(nlp,text,top_K_tokens,customized_tokens)
+		tokens_list_pos.append(text_tokens)
+
 		i+=1
 		if i%50==0:
 			print('processed:',i,'/',len(text_list))
 		# print('text tokens:',text_tokens)
-	return tokens_list
-
+	return tokens_list,tokens_list_pos
 
 
 if __name__ == '__main__':

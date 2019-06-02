@@ -67,13 +67,13 @@ class TokenSelection(object):
 						tokens_list=np.array(Verb_Adjective)
 					elif POS_category=="Noun_Verb_Adjective":
 						tokens_list=np.array(Noun_Verb_Adjective)
-			elif strategy="IDF":
-				if dataset in self.opt.pair_set.split(","):
-					tokens_list1,tokens_list2,labels = get_selected_token(dataset,file_name,strategy,selected_ratio=selected_ratio,cut)
-				else:
-					tokens_list,labels = get_selected_token(dataset,file_name,strategy,selected_ratio=selected_ratio,cut)
+			# elif strategy="IDF":
+			# 	if dataset in self.opt.pair_set.split(","):
+			# 		tokens_list1,tokens_list2,labels = get_selected_token(dataset,file_name,strategy,selected_ratio=selected_ratio,cut)
+			# 	else:
+			# 		tokens_list,labels = get_selected_token(dataset,file_name,strategy,selected_ratio=selected_ratio,cut)
 			else:
-				tokens_list,labels = self.get_selected_token(dataset,file_name,strategy,selected_ratio=selected_ratio,cut) 
+				tokens_list,labels = self.get_selected_token(dataset,file_name,strategy,selected_ratio=selected_ratio,cut=cut)
 			tokens_list_train_test.append(tokens_list)
 			labels_train_test.append(labels)
 		self.opt.nb_classes = len(set(labels))
@@ -139,18 +139,17 @@ class TokenSelection(object):
 		elif strategy == "entity":
 			pkl_file_path = output_root+file_name+"_entity.pkl"
 		elif strategy="IDF":
-			if file_name = 'train.csv':
-				self.idf_dict = self.get_idf_dict(texts)
+			idf_pkl = output_root+file_name+"_idf.pkl"
+			self.idf_dict = pickle.load(open(idf_pkl,'rb'))
 			if dataset in self.opt.pair_set.split(","):
 				texts1,texts2,labels = load_data_overall(dataset,file_name)
 				tokens_list1=CoreNLP.text2tokens_idf(texts1,self.idf_dict,customized_tokens,select_ratio=selected_ratio)
 				tokens_list2=CoreNLP.text2tokens_idf(texts2,self.idf_dict,customized_tokens,select_ratio=selected_ratio)
 				return tokens_list1,tokens_list2,labels
 			else:
-				texts,labels = load_data_overall(dataset,file_name) 
+				texts,labels = load_data_overall(dataset,file_name)
 				tokens_list=CoreNLP.text2tokens_idf(texts,self.idf_dict,customized_tokens,select_ratio=selected_ratio)
 				return tokens_list,labels
-		# return the lists, labels
 		temp = pickle.load(open(pkl_file_path,'rb'))
 		tokens_list,labels = temp[0],temp[1]
 		return tokens_list,labels
@@ -311,6 +310,24 @@ class TokenSelection(object):
 			print('shape:',np.array(idf_dict).shape)
 		else:
 			print("Already exists:",idf_pkl)
+
+		# IDF + blocks  and IDF+POS+blocks
+		idf_clause_pkl = output_root+file_name+"_idf_clause.pkl"
+		# get idf first
+		idf_pkl = output_root+file_name+"_idf.pkl"
+		self.idf_dict = pickle.load(open(idf_pkl,'rb'))
+
+		if not os.path.exists(idf_clause_pkl):
+			tokens_list,tokens_list_pos = CoreNLP.text2tokens_blocks_tree(nlp,texts,sig_num,customized_tokens=[],idf_dict=idf_dict)
+			if dataset in self.opt.pair_set.split(","):
+				tokens_list1,tokens_list_pos1 = CoreNLP.text2tokens_blocks_tree(nlp,texts2,sig_num,customized_tokens=[],idf_dict=idf_dict)
+				pickle.dump([tokens_list,tokens_list1,tokens_list_pos,tokens_list_pos1,labels],open(idf_clause_pkl, 'wb'))
+			else:
+				pickle.dump([tokens_list,tokens_list_pos,labels],open(idf_clause_pkl, 'wb'))
+			print('output succees:',idf_clause_pkl)
+			print('shape:',np.array(idf_clause_pkl).shape)
+		else:
+			print("Already exists:",idf_clause_pkl)
 
 
 # prepare the tokens list into pkl files.

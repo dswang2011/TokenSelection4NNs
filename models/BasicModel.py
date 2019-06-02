@@ -45,10 +45,13 @@ class BasicModel(object):
             x_val, y_val = dev
             history = self.model.fit(x_train,y_train,batch_size=self.opt.batch_size,epochs=self.opt.epoch_num,callbacks=callbacks,validation_data=(x_val, y_val),shuffle=True) 
         print('strategy:',strategy,' on model:',self.__class__.__name__)
-        print('history:',str(max(history.history["val_acc"])))
+        # print('history:',str(max(history.history["val_acc"])))
         times = time_callback.times
-        print("times:", round(times[1],3), "s")
+        # print("times:", round(times[1],3), "s")
         os.rename(filename,os.path.join( dirname,  str(min(history.history["acc"]))+"_"+strategy+"_" + self.__class__.__name__+"_"+self.opt.to_string()+".h5" ))
+
+        return str(max(history.history["val_acc"])), round(times[1],3), self.__class__.__name__
+
         
        
     def predict(self,x_test):
