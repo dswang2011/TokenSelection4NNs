@@ -17,7 +17,7 @@ def get_tokens_POS(nlp,sentence,tag_list,customized_tokens=[]):
 	token_tag_list = nlp.pos_tag(sentence)
 	res_tokens = []
 	for k,v in token_tag_list:
-		if v in tag_list or k in ['.','!','?',';'] or k.lower() in customized_tokens:
+		if v in tag_list or k.lower() in customized_tokens:
 			res_tokens.append(k)
 	return res_tokens
 # c(3,1)+c(3,2)+c(3,3) = 7 combinations
@@ -48,18 +48,25 @@ def text2tokens_fulltext(nlp,text_list):
 		tokens_list.append(nlp.word_tokenize(text))
 	return np.array(tokens_list)
 
-# full text
+# idf text
 def text2tokens_idf(text_list,idf_dict,customized_tokens,select_ratio):
 	tokens_list = []
 	select_num = int(len(idf_dict)*select_ratio)
-	top_idf_list = [idf_dict[i][0] for i in range(select_num)]
+	print('idf dict length:',len(idf_dict),' select ratio:',select_num)
+	sorted_x = sorted(idf_dict.items(), key=lambda kv:kv[1],reverse=True)
+	top_idf_list = [sorted_x[i][0] for i in range(select_num)]
+	print('selected length:',len(sorted_x))
+	top_idf_list = dict(zip(top_idf_list, top_idf_list))
+	# print('selected tops:',top_idf_list)
 	for text in text_list:
 		select_tokens = []
 		tokens = nltk.word_tokenize(text)
+		# print(tokens)
 		for tok in tokens:
 			if tok in top_idf_list or tok in customized_tokens:
 				select_tokens.append(tok)
 		tokens_list.append(select_tokens)
+	print('token res:',np.array(tokens_list).shape)
 	return np.array(tokens_list)
 
 	
@@ -164,15 +171,16 @@ def build_tree(nlp,sentence):
 		print(sentence,':',tuple_list)
 	return layer2node_list
 
-# tree pick up for entities + root
-def tree_pick(layer2node_list,nlp,sentence,entities=[]):
+# tree pick up for entity_indexes + root
+def tree_pick(layer2node_list,nlp,sentence,entity_indexes=[],key_tokens=[]):
+	word_list = nlp.word_tokenize(sentence)
 	selected_nodes = []
 	for layer in range(1,len(layer2node_list)):
 		if layer<3:
 			selected_nodes += layer2node_list[layer]
 		else:
 			for temp_node in layer2node_list[layer]:
-				if temp_node.data in entities:
+				if temp_node.data in entity_indexes or word_list[temp_node.data-1] in key_tokens:
 					# parent adding
 					if temp_node.parent not in selected_nodes:
 						selected_nodes.append(temp_node.parent)
@@ -181,7 +189,6 @@ def tree_pick(layer2node_list,nlp,sentence,entities=[]):
 						if sib_node not in selected_nodes:
 							selected_nodes.append(sib_node)
 	sorted_nodes = sorted(selected_nodes, key=lambda x: x.data)
-	word_list = nlp.word_tokenize(sentence)
 	return [word_list[node.data-1] for node in sorted_nodes]
 
 def tree_cut(layer2node_list,nlp,sentence,cut):
@@ -287,15 +294,15 @@ def get_token_entity(nlp,text,customized_tokens=[]):
 		layer2node_list = build_tree(nlp,sent)
 		# tree pickup
 		# entity collect
-		entities = []
+		entity_indexes = []
 		token_tag_list = nlp.ner(sent)
 		# print('entity tags:',token_tag_list)
 		index = 0
 		for token,tag in token_tag_list:
 			index +=1
 			if tag != 'O' or token.lower() in customized_tokens:
-				entities.append(index)
-		picked_tokens = tree_pick(layer2node_list,nlp,sent,entities)
+				entity_indexes.append(index)
+		picked_tokens = tree_pick(layer2node_list,nlp,sent,entity_indexes)
 		if end_punctuation not in picked_tokens:
 			picked_tokens.append(end_punctuation)
 		text_tokens+=picked_tokens
@@ -319,8 +326,7 @@ def get_token_block_tree(nlp,text,top_K_tokens=[],customized_tokens=[]):
 		# build tree
 		layer2node_list = build_tree(nlp,sent)
 		# tree pickup
-		print('selected tokens:',top_K_tokens+customized_tokens)
-		picked_tokens = tree_pick(layer2node_list,nlp,sent,top_K_tokens+customized_tokens)
+		picked_tokens = tree_pick(layer2node_list,nlp,sent,entity_indexes=[],key_tokens = top_K_tokens+customized_tokens)
 		if end_punctuation not in picked_tokens:
 			picked_tokens.append(end_punctuation)
 
@@ -428,7 +434,7 @@ def text2tokens_blocks_tree(nlp,text_list,sig_num,customized_tokens=[],idf_dict=
 if __name__ == '__main__':
 
 	###### test #####
-	texts=["Unique",
+	texts=["Unique, this is sth very un good.  And it is sth fine that is not very important, 1990098 and it is another sth weired like jj very 9900877 pretty and ugly.",
 	"A simple test. haha ",
 	"We were the No. 1 job creator in America in February and we are now the No. 4 job creator in the last year.",
 	"Property owners in New York City will be fined $250,000 for using \"improper pronouns\" due to new transgender laws.",
@@ -476,7 +482,9 @@ if __name__ == '__main__':
 		# token blocks selection
 		# idf_dict = get_idf_dict(texts)
 	# outside the loop, token block selection
-	text2tokens = text2tokens_blocks_tree(nlp,texts,sig_num=3,customized_tokens=['aaac','bbbc'])
-	print(text2tokens)
+	tokens_list,tokens_list_pos = text2tokens_blocks_tree(nlp,texts,sig_num=3,customized_tokens=['aaac','bbbc'])
+	print(tokens_list)
+	print('---')
+	print(tokens_list_pos)
 
 	nlp.close()

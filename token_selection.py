@@ -27,53 +27,12 @@ class TokenSelection(object):
 		return embedding_matrix
 
 	# strategy = fulltext, stopword, random, POS, dependency , IDF, 
-	def get_train(self,dataset,strategy="fulltext",selected_ratio=0.9,cut=1,POS_category="Noun"):
+	def get_train(self,dataset,strategy="fulltext",selected_ratio=0.9,cut=1,POS_category="Noun",sig_num=3):
 		print('=====strategy:',strategy,'pos_cat:',POS_category,' cut:',cut,'======')
 		tokens_list_train_test = []
 		labels_train_test = []
 		for file_name in ["train.csv","test.csv"]:
-# for file_name in [self.opt.train_file,self.opt.test_file]:
-			if strategy=="POS":
-				if dataset in self.opt.pair_set.split(","):
-					Noun,Verb,Adjective,Noun_Verb,Noun_Adjective,Verb_Adjective,Noun_Verb_Adjective,
-					Noun1,Verb1,Adjective1,Noun_Verb1,Noun_Adjective1,Verb_Adjective1,Noun_Verb_Adjective1,labels = self.get_selected_token(dataset,file_name,strategy,selected_ratio,cut)
-					if POS_category=="Noun":
-						tokens_list=np.array([Noun,Noun1])
-					elif POS_category=="Verb":
-						tokens_list=np.array([Verb,Verb1])
-					elif POS_category=="Adjective":
-						tokens_list=np.array([Adjective,Adjective1])
-					elif POS_category=="Noun_Verb":
-						tokens_list=np.array([Noun_Verb,Noun_Verb1])
-					elif POS_category=="Noun_Adjective":
-						tokens_list=np.array([Noun_Adjective,Noun_Adjective1])
-					elif POS_category=="Verb_Adjective":
-						tokens_list=np.array([Verb_Adjective,Verb_Adjective1])
-					elif POS_category=="Noun_Verb_Adjective":
-						tokens_list=np.array([Noun_Verb_Adjective,Noun_Verb_Adjective1])
-				else:
-					Noun,Verb,Adjective,Noun_Verb,Noun_Adjective,Verb_Adjective,Noun_Verb_Adjective,labels = self.get_selected_token(dataset,file_name,strategy,selected_ratio,cut)
-					if POS_category=="Noun":
-						tokens_list=np.array(Noun)
-					elif POS_category=="Verb":
-						tokens_list=np.array(Verb)
-					elif POS_category=="Adjective":
-						tokens_list=np.array(Adjective)
-					elif POS_category=="Noun_Verb":
-						tokens_list=np.array(Noun_Verb)
-					elif POS_category=="Noun_Adjective":
-						tokens_list=np.array(Noun_Adjective)
-					elif POS_category=="Verb_Adjective":
-						tokens_list=np.array(Verb_Adjective)
-					elif POS_category=="Noun_Verb_Adjective":
-						tokens_list=np.array(Noun_Verb_Adjective)
-			# elif strategy="IDF":
-			# 	if dataset in self.opt.pair_set.split(","):
-			# 		tokens_list1,tokens_list2,labels = get_selected_token(dataset,file_name,strategy,selected_ratio=selected_ratio,cut)
-			# 	else:
-			# 		tokens_list,labels = get_selected_token(dataset,file_name,strategy,selected_ratio=selected_ratio,cut)
-			else:
-				tokens_list,labels = self.get_selected_token(dataset,file_name,strategy,selected_ratio=selected_ratio,cut=cut)
+			tokens_list,labels = self.get_selected_token(dataset,file_name,strategy,selected_ratio=selected_ratio,cut=cut)
 			tokens_list_train_test.append(tokens_list)
 			labels_train_test.append(labels)
 		self.opt.nb_classes = len(set(labels))
@@ -112,7 +71,7 @@ class TokenSelection(object):
 		return train_test
 
 	# strategy = fulltext, stopword, random, POS, dependency;
-	def get_selected_token(self,dataset,file_name,strategy,selected_ratio=0.9,cut=1):
+	def get_selected_token(self,dataset,file_name,strategy,selected_ratio=0.9,cut=1,sig_num=3,POS_category="Noun"):
 		customized_tokens = ['aaac','bbbc','pppc','pppcs']
 		output_root = "prepared/"+dataset+"/"
 		if strategy == "fulltext":
@@ -127,29 +86,78 @@ class TokenSelection(object):
 			pkl_file_path = output_root+file_name+"_pos.pkl"
 			temp = pickle.load(open(pkl_file_path,'rb'))
 			if dataset in self.opt.pair_set.split(","):
-				Noun,Verb,Adjective,Noun_Verb,Noun_Adjective,Verb_Adjective,Noun_Verb_Adjective,
-				Noun1,Verb1,Adjective1,Noun_Verb1,Noun_Adjective1,Verb_Adjective1,Noun_Verb_Adjective1,labels = temp[0],temp[1],temp[2],temp[3],temp[4],temp[5],temp[6],
-				temp[7],temp[8],temp[9],temp[10],temp[11],temp[12],temp[13],temp[14]
-				return Noun,Verb,Adjective,Noun_Verb,Noun_Adjective,Verb_Adjective,Noun_Verb_Adjective,Noun1,Verb1,Adjective1,Noun_Verb1,Noun_Adjective1,Verb_Adjective1,Noun_Verb_Adjective1,labels
+				Noun,Verb,Adjective,Noun_Verb,Noun_Adjective,Verb_Adjective,Noun_Verb_Adjective, \
+				Noun1,Verb1,Adjective1,Noun_Verb1,Noun_Adjective1,Verb_Adjective1,Noun_Verb_Adjective1,labels = \
+					temp[0],temp[1],temp[2],temp[3],temp[4],temp[5],temp[6],\
+					temp[7],temp[8],temp[9],temp[10],temp[11],temp[12],temp[13],temp[14]
+				if POS_category=="Noun":
+					tokens_list=np.array([Noun,Noun1])
+				elif POS_category=="Verb":
+					tokens_list=np.array([Verb,Verb1])
+				elif POS_category=="Adjective":
+					tokens_list=np.array([Adjective,Adjective1])
+				elif POS_category=="Noun_Verb":
+					tokens_list=np.array([Noun_Verb,Noun_Verb1])
+				elif POS_category=="Noun_Adjective":
+					tokens_list=np.array([Noun_Adjective,Noun_Adjective1])
+				elif POS_category=="Verb_Adjective":
+					tokens_list=np.array([Verb_Adjective,Verb_Adjective1])
+				elif POS_category=="Noun_Verb_Adjective":
+					tokens_list=np.array([Noun_Verb_Adjective,Noun_Verb_Adjective1])
+				return tokens_list,labels
 			else:
-				Noun,Verb,Adjective,Noun_Verb,Noun_Adjective,Verb_Adjective,Noun_Verb_Adjective,labels = temp[0],temp[1],temp[2],temp[3],temp[4],temp[5],temp[6],temp[7]
-				return Noun,Verb,Adjective,Noun_Verb,Noun_Adjective,Verb_Adjective,Noun_Verb_Adjective,labels
+				Noun,Verb,Adjective,Noun_Verb,Noun_Adjective,Verb_Adjective,Noun_Verb_Adjective,labels = \
+					temp[0],temp[1],temp[2],temp[3],temp[4],temp[5],temp[6],temp[7]
+				if POS_category=="Noun":
+					tokens_list=np.array(Noun)
+				elif POS_category=="Verb":
+					tokens_list=np.array(Verb)
+				elif POS_category=="Adjective":
+					tokens_list=np.array(Adjective)
+				elif POS_category=="Noun_Verb":
+					tokens_list=np.array(Noun_Verb)
+				elif POS_category=="Noun_Adjective":
+					tokens_list=np.array(Noun_Adjective)
+				elif POS_category=="Verb_Adjective":
+					tokens_list=np.array(Verb_Adjective)
+				elif POS_category=="Noun_Verb_Adjective":
+					tokens_list=np.array(Noun_Verb_Adjective)
+				return tokens_list,labels
 		elif strategy =="dependency":
 			pkl_file_path = output_root+file_name+"_treecut"+str(cut)+".pkl"
 		elif strategy == "entity":
 			pkl_file_path = output_root+file_name+"_entity.pkl"
-		elif strategy="IDF":
-			idf_pkl = output_root+file_name+"_idf.pkl"
+		elif strategy=="IDF":
+			idf_pkl = output_root+"train.csv"+"_idf.pkl"
 			self.idf_dict = pickle.load(open(idf_pkl,'rb'))
 			if dataset in self.opt.pair_set.split(","):
-				texts1,texts2,labels = load_data_overall(dataset,file_name)
+				texts1,texts2,labels = data_reader.load_data_overall(dataset,file_name)
 				tokens_list1=CoreNLP.text2tokens_idf(texts1,self.idf_dict,customized_tokens,select_ratio=selected_ratio)
 				tokens_list2=CoreNLP.text2tokens_idf(texts2,self.idf_dict,customized_tokens,select_ratio=selected_ratio)
-				return tokens_list1,tokens_list2,labels
+				return [tokens_list1,tokens_list2],labels
 			else:
-				texts,labels = load_data_overall(dataset,file_name)
+				texts,labels = data_reader.load_data_overall(dataset,file_name)
 				tokens_list=CoreNLP.text2tokens_idf(texts,self.idf_dict,customized_tokens,select_ratio=selected_ratio)
 				return tokens_list,labels
+		elif strategy=="IDF_blocks":
+			pkl_file_path = output_root+file_name+"_idf_block"+str(sig_num)+".pkl"
+			temp = pickle.load(open(pkl_file_path,'rb'))
+			if dataset in self.opt.pair_set.split(","):
+				tokens_list,tokens_list1,tokens_list_pos,tokens_list_pos1,labels = temp[0],temp[1],temp[2],temp[3],temp[4]
+				return [tokens_list,tokens_list1],labels
+			else:
+				tokens_list,tokens_list_pos,labels = temp[0],temp[1],temp[2]
+				return tokens_list,labels
+		elif strategy=="IDF_blocks_pos":
+			pkl_file_path = output_root+file_name+"_idf_block"+str(sig_num)+".pkl"
+			temp = pickle.load(open(pkl_file_path,'rb'))
+			if dataset in self.opt.pair_set.split(","):
+				tokens_list,tokens_list1,tokens_list_pos,tokens_list_pos1,labels = temp[0],temp[1],temp[2],temp[3],temp[4]
+				return [tokens_list_pos,tokens_list_pos1],labels
+			else:
+				tokens_list,tokens_list_pos,labels = temp[0],temp[1],temp[2]
+				return tokens_list_pos,labels
+
 		temp = pickle.load(open(pkl_file_path,'rb'))
 		tokens_list,labels = temp[0],temp[1]
 		return tokens_list,labels
@@ -164,10 +172,10 @@ class TokenSelection(object):
 		file_path = os.path.join(output_root,file_name)
 		print('load data:',file_path)
 		if dataset in self.opt.pair_set.split(","):
-			texts,texts2,labels = data_reader.load_pair_data(file_path,hasHead=0)	# set with 1 if there is head
+			texts,texts2,labels = data_reader.load_data_overall(dataset,file_name)	# set with 1 if there is head
 			print(' pair data: ',texts[0],' 2:',texts2[0],' label:',labels[0],'[end_label]')
 		else:
-			texts,labels = data_reader.load_classification_data(file_path,hasHead=0)	# set with 1 if there is head
+			texts,labels = data_reader.load_data_overall(dataset,file_name)	# set with 1 if there is head
 			print(texts[0],' 2:',' label:',labels[0],'[end_label]')
 		# customized 
 		customized_tokens = ['aaac','bbbc','pppc','pppcs']
@@ -232,10 +240,11 @@ class TokenSelection(object):
 		if not os.path.exists(pos_pkl):
 			Noun,Verb,Adjective,Noun_Verb,Noun_Adjective,Verb_Adjective,Noun_Verb_Adjective = CoreNLP.text2token_POS(nlp,texts,customized_tokens)
 			if dataset in self.opt.pair_set.split(","):
-				Noun1,Verb1,Adjective1,Noun_Verb1,Noun_Adjective1,Verb_Adjective1,Noun_Verb_Adjective1 = CoreNLP.text2token_POS(nlp,texts2,customized_tokens)
+				Noun1,Verb1,Adjective1,Noun_Verb1,Noun_Adjective1,Verb_Adjective1,Noun_Verb_Adjective1 = \
+					CoreNLP.text2token_POS(nlp,texts2,customized_tokens)
 				# 1-> 8 (0->7)
-				pickle.dump([Noun,Verb,Adjective,Noun_Verb,Noun_Adjective,Verb_Adjective,Noun_Verb_Adjective,
-							 Noun1,Verb1,Adjective1,Noun_Verb1,Noun_Adjective1,Verb_Adjective1,Noun_Verb_Adjective1,labels],open(pos_pkl, 'wb'))
+				pickle.dump([Noun,Verb,Adjective,Noun_Verb,Noun_Adjective,Verb_Adjective,Noun_Verb_Adjective,\
+					Noun1,Verb1,Adjective1,Noun_Verb1,Noun_Adjective1,Verb_Adjective1,Noun_Verb_Adjective1,labels],open(pos_pkl, 'wb'))
 			else:
 				pickle.dump([Noun,Verb,Adjective,Noun_Verb,Noun_Adjective,Verb_Adjective,Noun_Verb_Adjective,labels],open(pos_pkl, 'wb'))
 			print('output succees (POSs):',pos_pkl)
@@ -312,22 +321,23 @@ class TokenSelection(object):
 			print("Already exists:",idf_pkl)
 
 		# IDF + blocks  and IDF+POS+blocks
-		idf_clause_pkl = output_root+file_name+"_idf_clause.pkl"
 		# get idf first
-		idf_pkl = output_root+file_name+"_idf.pkl"
+		idf_pkl = output_root+"train.csv"+"_idf.pkl"
 		self.idf_dict = pickle.load(open(idf_pkl,'rb'))
-
-		if not os.path.exists(idf_clause_pkl):
-			tokens_list,tokens_list_pos = CoreNLP.text2tokens_blocks_tree(nlp,texts,sig_num,customized_tokens=[],idf_dict=idf_dict)
-			if dataset in self.opt.pair_set.split(","):
-				tokens_list1,tokens_list_pos1 = CoreNLP.text2tokens_blocks_tree(nlp,texts2,sig_num,customized_tokens=[],idf_dict=idf_dict)
-				pickle.dump([tokens_list,tokens_list1,tokens_list_pos,tokens_list_pos1,labels],open(idf_clause_pkl, 'wb'))
+		# IDF blocks prepare
+		for sig_num in [3,4,5,6,7]:
+			idf_block_pkl = output_root+file_name+"_idf_block"+str(sig_num)+".pkl"
+			if not os.path.exists(idf_block_pkl):
+				tokens_list,tokens_list_pos = CoreNLP.text2tokens_blocks_tree(nlp,texts,sig_num,customized_tokens=[],idf_dict=self.idf_dict)
+				if dataset in self.opt.pair_set.split(","):
+					tokens_list1,tokens_list_pos1 = CoreNLP.text2tokens_blocks_tree(nlp,texts2,sig_num,customized_tokens=[],idf_dict=self.idf_dict)
+					pickle.dump([tokens_list,tokens_list1,tokens_list_pos,tokens_list_pos1,labels],open(idf_block_pkl, 'wb'))
+				else:
+					pickle.dump([tokens_list,tokens_list_pos,labels],open(idf_block_pkl, 'wb'))
+				print('output succees:',idf_block_pkl)
+				print('shape:',np.array(idf_block_pkl).shape)
 			else:
-				pickle.dump([tokens_list,tokens_list_pos,labels],open(idf_clause_pkl, 'wb'))
-			print('output succees:',idf_clause_pkl)
-			print('shape:',np.array(idf_clause_pkl).shape)
-		else:
-			print("Already exists:",idf_clause_pkl)
+				print("Already exists:",idf_block_pkl)
 
 
 # prepare the tokens list into pkl files.
@@ -345,8 +355,8 @@ if __name__ == '__main__':
 	# # token selection
 	nlp = StanfordCoreNLP(params.corenlp_root)
 	# # below is where you need to set your data name
-	token_select.token_selection_preparation(nlp = nlp, dataset="GAP",file_name="train.csv")
-	token_select.token_selection_preparation(nlp = nlp, dataset="GAP",file_name="test.csv")
+	token_select.token_selection_preparation(nlp = nlp, dataset="factcheck",file_name="train.csv")
+	token_select.token_selection_preparation(nlp = nlp, dataset="factcheck",file_name="test.csv")
 	nlp.close() # Do not forget to close! The backend server will consume a lot memery.
 
 	# test output some data

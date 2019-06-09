@@ -372,7 +372,7 @@ def load_data_overall(dataset,file_name="train.csv"):
 	if dataset in ['GAP']:
 		texts,labels = load_classification_data(file_path=output_root+file_name)
 	elif dataset in ['MR','IMDB']:
-		texts,labels = load_bi_class_data()
+		texts,labels = load_bi_class_data(file_path=output_root+file_name)
 	elif dataset in ['factcheck']:
 		texts1,texts2,labels = load_pair_data(file_path = output_root+file_name)
 		return texts1,texts2,labels

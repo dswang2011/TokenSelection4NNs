@@ -75,8 +75,9 @@ class BasicModel(object):
         
         if self.opt.match_type == 'pointwise':
             reps = [representation_model(doc) for doc in [self.question, self.answer]]
-            output = Dense(self.opt.nb_classes, activation="softmax")(Concatenate()(reps))
-#         ,
+            reps = Dense(100, activation="relu")(Concatenate()(reps))
+            output = Dense(self.opt.nb_classes, activation="softmax")(reps)
+            
             model = Model([self.question,self.answer], output)
             model.compile(loss = "categorical_hinge",  optimizer = getOptimizer(name=self.opt.optimizer,lr=self.opt.lr), metrics=["acc"])
             
@@ -97,7 +98,7 @@ class BasicModel(object):
     
     def train_matching(self,train,dev=None,dirname="saved_model",strategy=None):
         self.model =  self.get_pair_model(self.opt)
-        self.train(train,dev=dev,dirname=dirname,strategy=strategy)
+        return self.train(train,dev=dev,dirname=dirname,strategy=strategy)
 
 
 
