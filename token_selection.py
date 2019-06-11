@@ -172,11 +172,10 @@ class TokenSelection(object):
 		file_path = os.path.join(output_root,file_name)
 		print('load data:',file_path)
 		if dataset in self.opt.pair_set.split(","):
-			texts,texts2,labels = data_reader.load_data_overall(dataset,file_name)	# set with 1 if there is head
-			print(' pair data: ',texts[0],' 2:',texts2[0],' label:',labels[0],'[end_label]')
+			texts,texts2,labels = data_reader.load_data_overall(dataset,file_name,test100=False)	# set with 1 if there is head
+			print('=== this is a paired text dataset ===')
 		else:
 			texts,labels = data_reader.load_data_overall(dataset,file_name)	# set with 1 if there is head
-			print(texts[0],' 2:',' label:',labels[0],'[end_label]')
 		# customized 
 		customized_tokens = ['aaac','bbbc','pppc','pppcs']
 		# full text
@@ -259,6 +258,7 @@ class TokenSelection(object):
 		for cut in cuts:
 			dependency_pkl = output_root+file_name+"_treecut"+str(cut)+".pkl"
 			if os.path.exists(dependency_pkl):
+				print("Already exists:",dependency_pkl)
 				exists.append(cut)
 		cuts = [x for x in cuts if x not in exists]
 		# excute for the remaining
@@ -328,9 +328,9 @@ class TokenSelection(object):
 		for sig_num in [3,4,5,6,7]:
 			idf_block_pkl = output_root+file_name+"_idf_block"+str(sig_num)+".pkl"
 			if not os.path.exists(idf_block_pkl):
-				tokens_list,tokens_list_pos = CoreNLP.text2tokens_blocks_tree(nlp,texts,sig_num,customized_tokens=[],idf_dict=self.idf_dict)
+				tokens_list,tokens_list_pos = CoreNLP.text2tokens_blocks_tree(nlp,texts,sig_num,customized_tokens=customized_tokens,idf_dict=self.idf_dict)
 				if dataset in self.opt.pair_set.split(","):
-					tokens_list1,tokens_list_pos1 = CoreNLP.text2tokens_blocks_tree(nlp,texts2,sig_num,customized_tokens=[],idf_dict=self.idf_dict)
+					tokens_list1,tokens_list_pos1 = CoreNLP.text2tokens_blocks_tree(nlp,texts2,sig_num,customized_tokens=customized_tokens,idf_dict=self.idf_dict)
 					pickle.dump([tokens_list,tokens_list1,tokens_list_pos,tokens_list_pos1,labels],open(idf_block_pkl, 'wb'))
 				else:
 					pickle.dump([tokens_list,tokens_list_pos,labels],open(idf_block_pkl, 'wb'))
@@ -355,7 +355,7 @@ if __name__ == '__main__':
 	# # token selection
 	nlp = StanfordCoreNLP(params.corenlp_root)
 	# # below is where you need to set your data name
-	token_select.token_selection_preparation(nlp = nlp, dataset="factcheck",file_name="train.csv")
+	# token_select.token_selection_preparation(nlp = nlp, dataset="factcheck",file_name="train.csv")
 	token_select.token_selection_preparation(nlp = nlp, dataset="factcheck",file_name="test.csv")
 	nlp.close() # Do not forget to close! The backend server will consume a lot memery.
 

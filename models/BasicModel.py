@@ -31,12 +31,12 @@ class BasicModel(object):
         return None
 
     
-    def train(self,train,dev=None,dirname="saved_model",strategy=None):
+    def train(self,train,dev=None,dirname="saved_model",strategy=None,dataset=''):
         x_train,y_train = train
 
         time_callback = TimeHistory()
 
-        filename = os.path.join( dirname,  "best_model_" + self.__class__.__name__+".h5" )
+        filename = os.path.join(dirname,strategy+'_'+dataset+"_best_model_"+self.__class__.__name__+".h5")
         callbacks = [EarlyStopping(monitor='val_loss', patience=5),
              ModelCheckpoint(filepath=filename, monitor='val_loss', save_best_only=True), time_callback]
         if dev is None:
@@ -96,9 +96,9 @@ class BasicModel(object):
         return model
 
     
-    def train_matching(self,train,dev=None,dirname="saved_model",strategy=None):
+    def train_matching(self,train,dev=None,dirname="saved_model",strategy=None,dataset=''):
         self.model =  self.get_pair_model(self.opt)
-        return self.train(train,dev=dev,dirname=dirname,strategy=strategy)
+        return self.train(train,dev=dev,dirname=dirname,strategy=strategy,dataset=dataset)
 
 
 

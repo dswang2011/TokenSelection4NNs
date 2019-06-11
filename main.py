@@ -44,9 +44,9 @@ def grid_search_parameters(grid_parameters, strategy, train, test, dict_results,
         params.setup(zip(grid_parameters.keys(), parameter))
         model = models.setup(params)
         if dataset in params.pair_set.split(","):
-            val_acc, time_spent, model = model.train_matching(train, dev=test, strategy=strategy)  ### strategy here is just for printing the type
+            val_acc, time_spent, model = model.train_matching(train, dev=test, strategy=strategy,dataset=dataset)  ### strategy here is just for printing the type
         else:    
-            val_acc, time_spent, model = model.train(train, dev=test, strategy=strategy)  ### strategy here is just for printing the type
+            val_acc, time_spent, model = model.train(train, dev=test, strategy=strategy,dataset=dataset)  ### strategy here is just for printing the type
         if dataset not in dict_results:
             dict_results[dataset] = {}
         if model not in dict_results[dataset]:
@@ -125,7 +125,7 @@ def train_for_document():
     file_summary_results = open("summary_results.txt", "a")
 
     dict_results = {}
-    datasets = ["MR"]
+    datasets = ["IMDB"]
     for dataset in datasets:
         for grid_parameters in models:
             # Set strategy here: strategy = fulltext, stopword, random, POS, dependency, entity ;
@@ -143,11 +143,11 @@ def train_for_document():
                                 "stopword": {},
                                 "random": {},
                                 "POS":{},
-                               # "dependency":{},
-                               # "entity":{},
-                               # "IDF":{},
-                               # "IDF_blocks":{},
-                               # "IDF_blocks_pos":{}	# sig_num = [3,4,5,6,7]
+                               "dependency":{},
+                               "entity":{},
+                               "IDF":{},
+                               "IDF_blocks":{},
+                               "IDF_blocks_pos":{}	# sig_num = [3,4,5,6,7]
                                }
 
             for strategy in dict_strategies:

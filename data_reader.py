@@ -367,7 +367,8 @@ def load_mr_data(folder):
 	return [X,y]
 
 
-def load_data_overall(dataset,file_name="train.csv"):
+def load_data_overall(dataset,file_name="train.csv",test100=False):
+	test_num=5000
 	output_root = "prepared/"+dataset+"/"
 	if dataset in ['GAP']:
 		texts,labels = load_classification_data(file_path=output_root+file_name)
@@ -375,7 +376,11 @@ def load_data_overall(dataset,file_name="train.csv"):
 		texts,labels = load_bi_class_data(file_path=output_root+file_name)
 	elif dataset in ['factcheck']:
 		texts1,texts2,labels = load_pair_data(file_path = output_root+file_name)
+		if test100==True:
+			return texts1[:test_num],texts2[:test_num],labels[:test_num]
 		return texts1,texts2,labels
+	if test100==True:
+		return texts[:test_num],labels[:test_num]
 	return texts,labels
 
 # Process MR 

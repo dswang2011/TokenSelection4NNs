@@ -168,7 +168,8 @@ def build_tree(nlp,sentence):
 				break
 			layer2node_list[layer] = node_list
 	except:
-		print(sentence,':',tuple_list)
+		print('tree building error:',sentence,':',tuple_list)
+		return None
 	return layer2node_list
 
 # tree pick up for entity_indexes + root
@@ -210,8 +211,8 @@ def get_token_dependency(nlp,text,cut=0):
 	for sent in sentences:
 		if len(sent.strip())<3:
 			continue
-		if len(sent)>600:
-			sent = sent[:595]
+		if len(sent)>700:
+			sent = sent[:695]
 		# end punctuation
 		end_punctuation = sent.strip()[-1]
 		if end_punctuation not in ['.','!','?']:
@@ -219,6 +220,8 @@ def get_token_dependency(nlp,text,cut=0):
 			sent = sent + end_punctuation
 		# build tree
 		layer2node_list = build_tree(nlp,sent)
+		if layer2node_list==None:
+			return text_tokens
 		# cut tree
 		sent_tokens = tree_cut(layer2node_list,nlp,sent,cut)
 		if end_punctuation not in sent_tokens:
@@ -242,8 +245,8 @@ def get_token_treecuts(nlp,text,cuts=[1,2,3]):
 	for sent in sentences:
 		if len(sent.strip())<3:
 			continue
-		if len(sent)>600:
-			sent=sent[:595]
+		if len(sent)>700:
+			sent=sent[:695]
 		# end punctuation
 		end_punctuation = sent.strip()[-1]
 		if end_punctuation not in ['.','!','?']:
@@ -251,6 +254,8 @@ def get_token_treecuts(nlp,text,cuts=[1,2,3]):
 			sent = sent + end_punctuation
 		# build tree
 		layer2node_list = build_tree(nlp,sent)
+		if layer2node_list==None:
+			return text_tokens
 		# cut tree
 		for cut in cuts:
 			if cut not in text_tokens.keys():
@@ -283,8 +288,8 @@ def get_token_entity(nlp,text,customized_tokens=[]):
 	for sent in sentences:
 		if len(sent.strip())<4:
 			continue
-		if len(sent)>600:
-			sent=sent[:595]
+		if len(sent)>700:
+			sent=sent[:695]
 		# end punctuation
 		end_punctuation = sent.strip()[-1]
 		if end_punctuation not in ['.','!','?']:
@@ -292,6 +297,8 @@ def get_token_entity(nlp,text,customized_tokens=[]):
 			sent = sent + end_punctuation
 		# build tree
 		layer2node_list = build_tree(nlp,sent)
+		if layer2node_list==None:
+			return text_tokens
 		# tree pickup
 		# entity collect
 		entity_indexes = []
@@ -316,8 +323,8 @@ def get_token_block_tree(nlp,text,top_K_tokens=[],customized_tokens=[]):
 	for sent in sentences:
 		if len(sent.strip())<4:
 			continue
-		if len(sent)>600:
-			sent=sent[:595]
+		if len(sent)>700:
+			sent=sent[:695]
 		# end punctuation
 		end_punctuation = sent.strip()[-1]
 		if end_punctuation not in ['.','!','?']:
@@ -325,6 +332,8 @@ def get_token_block_tree(nlp,text,top_K_tokens=[],customized_tokens=[]):
 			sent = sent + end_punctuation
 		# build tree
 		layer2node_list = build_tree(nlp,sent)
+		if layer2node_list==None:
+			return text_tokens
 		# tree pickup
 		picked_tokens = tree_pick(layer2node_list,nlp,sent,entity_indexes=[],key_tokens = top_K_tokens+customized_tokens)
 		if end_punctuation not in picked_tokens:
@@ -462,7 +471,7 @@ if __name__ == '__main__':
 		# tokens_list = get_token_entity(nlp,txt,customized_tokens=[','])
 		# print('entity: ',tokens_list)
 
-		# # POS
+		# POS
 		# print('Noun: ',get_tokens_POS(nlp,txt,noun_list))
 		# print('Verb: ',get_tokens_POS(nlp,txt,verb_list))
 		# print('Adjective: ',get_tokens_POS(nlp,txt,adjective_list))
