@@ -366,6 +366,20 @@ def load_mr_data(folder):
 	X,y = shuffle(texts, labels, random_state=0)
 	return [X,y]
 
+def load_RTE_data(file_path,hasHead=0):
+	texts1,texts2=[],[]
+	labels=[]
+	with open(file_path, 'r', encoding='utf8') as f:
+		for row in f:
+			strs = row.split('\t')
+			label = strs[3].strip().lower()
+			if label not in ['not_entailment','entailment']:
+				print('strange label:',label)
+				continue
+			texts1.append(strs[1].strip())
+			texts2.append(strs[2].strip())
+			labels.append(label)
+	return texts1,texts2,labels
 
 def load_data_overall(dataset,file_name="train.csv",test100=False):
 	test_num=5000
@@ -378,6 +392,9 @@ def load_data_overall(dataset,file_name="train.csv",test100=False):
 		texts1,texts2,labels = load_pair_data(file_path = output_root+file_name)
 		if test100==True:
 			return texts1[:test_num],texts2[:test_num],labels[:test_num]
+		return texts1,texts2,labels
+	elif dataset in ['RTE','QQP']:
+		texts1,texts2,labels = load_RTE_data(file_path = output_root+file_name)
 		return texts1,texts2,labels
 	if test100==True:
 		return texts[:test_num],labels[:test_num]
