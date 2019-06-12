@@ -298,7 +298,7 @@ def get_token_entity(nlp,text,customized_tokens=[]):
 		# build tree
 		layer2node_list = build_tree(nlp,sent)
 		if layer2node_list==None:
-			return text_tokens
+			return customized_tokens
 		# tree pickup
 		# entity collect
 		entity_indexes = []
@@ -333,7 +333,7 @@ def get_token_block_tree(nlp,text,top_K_tokens=[],customized_tokens=[]):
 		# build tree
 		layer2node_list = build_tree(nlp,sent)
 		if layer2node_list==None:
-			return text_tokens
+			return top_K_tokens
 		# tree pickup
 		picked_tokens = tree_pick(layer2node_list,nlp,sent,entity_indexes=[],key_tokens = top_K_tokens+customized_tokens)
 		if end_punctuation not in picked_tokens:
