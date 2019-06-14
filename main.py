@@ -39,6 +39,7 @@ def grid_search_parameters(grid_parameters, strategy, train, test, dict_results,
     parameters = [arg for index, arg in enumerate(itertools.product(*grid_parameters.values())) if
                   index % args.gpu_num == args.gpu]
     val_acc = 0
+    max_acc = 0
     for parameter in parameters:
         print(parameter)
         params.setup(zip(grid_parameters.keys(), parameter))
@@ -47,6 +48,8 @@ def grid_search_parameters(grid_parameters, strategy, train, test, dict_results,
             val_acc, time_spent, model = model.train_matching(train, dev=test, strategy=strategy,dataset=dataset)  ### strategy here is just for printing the type
         else:    
             val_acc, time_spent, model = model.train(train, dev=test, strategy=strategy,dataset=dataset)  ### strategy here is just for printing the type
+        if float(val_acc) > max_acc:
+            max_acc=float(val_acc)
         if dataset not in dict_results:
             dict_results[dataset] = {}
         if model not in dict_results[dataset]:
@@ -57,7 +60,7 @@ def grid_search_parameters(grid_parameters, strategy, train, test, dict_results,
         if val_acc > dict_results[dataset][model][strategy]['val_acc']:
             dict_results[dataset][model][strategy]['val_acc'] = val_acc
             dict_results[dataset][model][strategy]['time'] = time_spent
-
+    return model,max_acc
 
 
 def train_for_document():
@@ -85,13 +88,14 @@ def train_for_document():
     #     "validation_split":[0.1],
     # }
 
-    models = [{
-        # CNN parameters
+    models = [
+    	#CNN parameters
+    	{
         "dropout_rate" : [0.3],#,0.5,0.75,0.8,1]    ,
         "model": ["cnn"],
         # "filter_size":[30],
         "filter_size":[30,50],
-        "lr":[0.001],
+        "lr":[0.4,0.2],
         # "batch_size":[32],
         "batch_size":[32,64],
         # "validation_split":[0.05,0.1,0.15,0.2],
@@ -104,7 +108,7 @@ def train_for_document():
             "dropout_rate": [0.2],  # ,0.5,0.75,0.8,1]    ,
             "model": ["bilstm_2L"],
             # "contatenate":[0],
-            "lr": [0.001],
+            "lr": [0.4,0.2],
             "batch_size": [32, 64],
             # "validation_split":[0.05,0.1,0.15,0.2],
             "validation_split": [0.1],
@@ -123,26 +127,27 @@ def train_for_document():
     # }
 
     file_summary_results = open("summary_results.txt", "a")
+    file_local_trend = open("local_results.txt","a")
 
     dict_results = {}
-    datasets = ["IMDB"]
+    datasets = ["RTE"]
     for dataset in datasets:
         for grid_parameters in models:
             # Set strategy here: strategy = fulltext, stopword, random, POS, dependency, entity ;
             #if strategy="POS", then POS_category works, possible value: "Noun", "Verb", "Adjective", "Noun_Verb", "Noun_Adjective", "Verb_Adjective", "Noun_Verb_Adjective".
             #
             # POS_categories = ["Noun", "Verb", "Adjective", "Noun_Verb", "Noun_Adjective", "Verb_Adjective", "Noun_Verb_Adjective"]
-            POS_categories = ["Noun_Verb", "Noun_Adjective", "Verb_Adjective", "Noun_Verb_Adjective"]
-            selected_ratios = [0.9,0.8,0.7]
+            POS_categories = ["Noun_Verb","Noun_Adjective", "Verb_Adjective", "Noun_Verb_Adjective"]
+            selected_ratios = [0.9,0.8,0.7,0.6]
             # selected_ratios = [0.8]
             cuts = [1,2]
             sig_num = [3,4,5,6,7]
 
             dict_strategies = {
-                                "fulltext": {},
-                                "stopword": {},
-                                "random": {},
-                                "POS":{},
+                                # "fulltext": {},
+                                # "stopword": {},
+                                # "random": {},
+                                # "POS":{},
                                "dependency":{},
                                "entity":{},
                                "IDF":{},
@@ -155,28 +160,38 @@ def train_for_document():
                 if strategy == "fulltext" or strategy == "stopword" or strategy == "entity" or strategy == "triple":
                     token_select = TokenSelection(params)
                     train,test = token_select.get_train(dataset=dataset,strategy=strategy)
+                    print('running:',strategy)
                     grid_search_parameters(grid_parameters, strategy, train, test, dict_results, dataset)
                 elif strategy == "POS":
                     for pos_cat in POS_categories:
                         token_select = TokenSelection(params)
                         train,test = token_select.get_train(dataset=dataset,strategy=strategy, POS_category=pos_cat)
-                        grid_search_parameters(grid_parameters, strategy, train, test, dict_results, dataset)
+                        print('running:',strategy,':',pos_cat)
+                        model,max_acc = grid_search_parameters(grid_parameters, strategy, train, test, dict_results, dataset)
+                        pprint.pprint(dataset+'-'+model+'-'+strategy+'-'+pos_cat+'->'+str(max_acc), file_local_trend)
                 elif strategy == "random" or strategy == "IDF":
                     for ratio in selected_ratios:
                         token_select = TokenSelection(params)
                         train, test = token_select.get_train(dataset=dataset, strategy=strategy, selected_ratio=ratio)
-                        grid_search_parameters(grid_parameters, strategy, train, test, dict_results, dataset)
+                        print('running:',strategy,':',ratio)
+                        model,max_acc=grid_search_parameters(grid_parameters, strategy, train, test, dict_results, dataset)
+                        pprint.pprint(dataset+'-'+model+'-'+strategy+'-'+str(ratio)+'->'+str(max_acc), file_local_trend)
                 elif strategy == "dependency":
                     for cut in cuts:
                         token_select = TokenSelection(params)
                         train, test = token_select.get_train(dataset=dataset, strategy=strategy, cut=cut)
-                        grid_search_parameters(grid_parameters, strategy, train, test, dict_results, dataset)
+                        model,max_acc=grid_search_parameters(grid_parameters, strategy, train, test, dict_results, dataset)
+                        pprint.pprint(dataset+'-'+model+'-'+strategy+'-'+str(cut)+'->'+str(max_acc), file_local_trend)
                 elif strategy == "IDF_blocks" or strategy == "IDF_blocks_pos":
                     for sig_n in sig_num:
                         token_select = TokenSelection(params)
                         train, test = token_select.get_train(dataset=dataset, strategy=strategy, sig_num=sig_n)
-                        grid_search_parameters(grid_parameters, strategy, train, test, dict_results, dataset)
-
+                        model,max_acc=grid_search_parameters(grid_parameters, strategy, train, test, dict_results, dataset)
+                        pprint.pprint(dataset+'-'+model+'-'+strategy+'-'+str(sig_n)+'->'+str(max_acc), file_local_trend)
+                else:
+                    pprint('========WRONG strategy=================')
+                    pprint.pprint('====wrong strategy======'+dataset+'-'+strategy,file_local_trend)
+                    pprint('PLESE check!!!==================')
         pprint.pprint(dict_results)
         pprint.pprint(dict_results, file_summary_results)
         file_summary_results.close()

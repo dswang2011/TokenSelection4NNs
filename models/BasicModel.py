@@ -4,11 +4,12 @@ from keras import optimizers
 import os
 import keras
 import time
+import numpy as np
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.models import Model, Input, model_from_json, load_model, Sequential
 from keras import backend as K
-from keras.layers import Layer,Dense, Concatenate
-from models.matching import Attention,getOptimizer,precision_batch,identity_loss,MarginLoss,Cosine
+from keras.layers import Layer,Dense, Concatenate,Subtract,Multiply
+from models.matching import Attention,getOptimizer,precision_batch,identity_loss,MarginLoss,Cosine,Stack
 
 class TimeHistory(keras.callbacks.Callback):
     def on_train_begin(self, logs={}):
@@ -67,18 +68,24 @@ class BasicModel(object):
         # representation_model.layers.pop()
         # representation_model = Model(inputs=self.model.input, output=self.model.get_layer('previous_layer').output)
         representation_model = Model(inputs=self.model.input, output=self.model.layers[-2].output)
-        representation_model.summary()
+        
 
         self.question = Input(shape=(self.opt.max_sequence_length,), dtype='int32')
         self.answer = Input(shape=(self.opt.max_sequence_length,), dtype='int32')
         self.neg_answer = Input(shape=(self.opt.max_sequence_length,), dtype='int32')
         
+
         if self.opt.match_type == 'pointwise':
-            reps = [representation_model(doc) for doc in [self.question, self.answer]]
-            reps = Dense(100, activation="relu")(Concatenate()(reps))
+            q = representation_model(self.question)
+            a = representation_model(self.answer)
+            reps = [q,a,Subtract()([q,a]),Multiply()([q,a])]
+            reps = Concatenate()(reps)
             output = Dense(self.opt.nb_classes, activation="softmax")(reps)
+
+            # output = Dense(self.opt.nb_classes,activation="softmax")(np.array([sim_score]))
             
             model = Model([self.question,self.answer], output)
+            model.summary()
             model.compile(loss = "categorical_hinge",  optimizer = getOptimizer(name=self.opt.optimizer,lr=self.opt.lr), metrics=["acc"])
             
         elif self.opt.match_type == 'pairwise':

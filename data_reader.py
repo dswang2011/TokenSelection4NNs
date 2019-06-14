@@ -369,11 +369,11 @@ def load_mr_data(folder):
 def load_RTE_data(file_path,hasHead=0):
 	texts1,texts2=[],[]
 	labels=[]
-	with open(file_path, 'r', encoding='utf8') as f:
+	with open(file_path, 'r', encoding='utf8', errors='ignore') as f:
 		for row in f:
 			strs = row.split('\t')
 			label = strs[3].strip().lower()
-			if label not in ['not_entailment','entailment']:
+			if label not in ['not_entailment','entailment','0','1']:
 				print('strange label:',label)
 				continue
 			texts1.append(strs[1].strip())

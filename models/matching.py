@@ -72,6 +72,46 @@ class MarginLoss(Layer):
 
 
 
+
+
+class Stack(Layer):
+
+    def __init__(self, dropout_keep_prob = 1, axis = -1, keep_dims = True, **kwargs):
+        # self.output_dim = output_dim
+        self.axis = axis
+        self.keep_dims = keep_dims
+        self.dropout_keep_prob=dropout_keep_prob
+        self.dropout_probs = Dropout(dropout_keep_prob)
+        super(Stack, self).__init__(**kwargs)
+
+    def get_config(self):
+        config = {'axis': self.axis, 'keep_dims': self.keep_dims}
+        base_config = super(Stack, self).get_config()
+        return dict(list(base_config.items())+list(config.items()))
+
+    def build(self, input_shape):
+
+    
+        super(Stack, self).build(input_shape)  # Be sure to call this somewhere!
+
+    def call(self, inputs):
+        x = inputs
+
+
+        output= K.transpose(K.stack([x,1-x]))
+        return output
+
+    def compute_output_shape(self, input_shape):
+#        print(input_shape)
+        # print(type(input_shape[1]))
+        output_shape = [input_shape[0],2]
+        
+#        print(output_shape)
+        return([tuple(output_shape)])
+
+
+
+
 class Cosine(Layer):
 
     def __init__(self, dropout_keep_prob = 1, axis = -1, keep_dims = True, **kwargs):
@@ -108,7 +148,7 @@ class Cosine(Layer):
         output= K.sum(self.dropout_probs(x*y),1) / norm1 /norm2
 
 
-        return K.expand_dims(output)
+        return output
 
     def compute_output_shape(self, input_shape):
 #        print(input_shape)
