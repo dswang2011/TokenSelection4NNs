@@ -12,6 +12,7 @@ from token_selection import TokenSelection
 
 from sklearn.utils import shuffle
 import pprint
+import util
 
 params = Params()
 parser = argparse.ArgumentParser(description='Running Gap.')
@@ -95,7 +96,7 @@ def train_for_document():
         "model": ["cnn"],
         # "filter_size":[30],
         "filter_size":[30,50],
-        "lr":[0.4,0.2],
+        "lr":[0.1,0.01],
         # "batch_size":[32],
         "batch_size":[32,64],
         # "validation_split":[0.05,0.1,0.15,0.2],
@@ -108,7 +109,7 @@ def train_for_document():
             "dropout_rate": [0.2],  # ,0.5,0.75,0.8,1]    ,
             "model": ["bilstm_2L"],
             # "contatenate":[0],
-            "lr": [0.4,0.2],
+            "lr": [0.1,0.01],
             "batch_size": [32, 64],
             # "validation_split":[0.05,0.1,0.15,0.2],
             "validation_split": [0.1],
@@ -127,10 +128,10 @@ def train_for_document():
     # }
 
     file_summary_results = open("summary_results.txt", "a")
-    file_local_trend = open("local_results.txt","a")
+    file_local = "local_results.txt"
 
     dict_results = {}
-    datasets = ["RTE"]
+    datasets = ["factcheck"]
     for dataset in datasets:
         for grid_parameters in models:
             # Set strategy here: strategy = fulltext, stopword, random, POS, dependency, entity ;
@@ -144,15 +145,15 @@ def train_for_document():
             sig_num = [3,4,5,6,7]
 
             dict_strategies = {
-                                # "fulltext": {},
-                                # "stopword": {},
-                                # "random": {},
-                                # "POS":{},
-                               "dependency":{},
-                               "entity":{},
-                               "IDF":{},
-                               "IDF_blocks":{},
-                               "IDF_blocks_pos":{}	# sig_num = [3,4,5,6,7]
+                                "fulltext": {},
+                                "stopword": {},
+                                "random": {},
+                                "POS":{}
+                               # "dependency":{},
+                               # "entity":{},
+                               # "IDF":{},
+                               # "IDF_blocks":{},
+                               # "IDF_blocks_pos":{}	# sig_num = [3,4,5,6,7]
                                }
 
             for strategy in dict_strategies:
@@ -168,33 +169,33 @@ def train_for_document():
                         train,test = token_select.get_train(dataset=dataset,strategy=strategy, POS_category=pos_cat)
                         print('running:',strategy,':',pos_cat)
                         model,max_acc = grid_search_parameters(grid_parameters, strategy, train, test, dict_results, dataset)
-                        pprint.pprint(dataset+'-'+model+'-'+strategy+'-'+pos_cat+'->'+str(max_acc), file_local_trend)
+                        util.write_line(dataset+'-'+model+'-'+strategy+'-'+pos_cat+'->'+str(max_acc),file_local)
                 elif strategy == "random" or strategy == "IDF":
                     for ratio in selected_ratios:
                         token_select = TokenSelection(params)
                         train, test = token_select.get_train(dataset=dataset, strategy=strategy, selected_ratio=ratio)
                         print('running:',strategy,':',ratio)
                         model,max_acc=grid_search_parameters(grid_parameters, strategy, train, test, dict_results, dataset)
-                        pprint.pprint(dataset+'-'+model+'-'+strategy+'-'+str(ratio)+'->'+str(max_acc), file_local_trend)
+                        util.write_line(dataset+'-'+model+'-'+strategy+'-'+str(ratio)+'->'+str(max_acc), file_local)
                 elif strategy == "dependency":
                     for cut in cuts:
                         token_select = TokenSelection(params)
                         train, test = token_select.get_train(dataset=dataset, strategy=strategy, cut=cut)
                         model,max_acc=grid_search_parameters(grid_parameters, strategy, train, test, dict_results, dataset)
-                        pprint.pprint(dataset+'-'+model+'-'+strategy+'-'+str(cut)+'->'+str(max_acc), file_local_trend)
+                        util.write_line(dataset+'-'+model+'-'+strategy+'-'+str(cut)+'->'+str(max_acc), file_local)
                 elif strategy == "IDF_blocks" or strategy == "IDF_blocks_pos":
                     for sig_n in sig_num:
                         token_select = TokenSelection(params)
                         train, test = token_select.get_train(dataset=dataset, strategy=strategy, sig_num=sig_n)
                         model,max_acc=grid_search_parameters(grid_parameters, strategy, train, test, dict_results, dataset)
-                        pprint.pprint(dataset+'-'+model+'-'+strategy+'-'+str(sig_n)+'->'+str(max_acc), file_local_trend)
+                        util.write_line(dataset+'-'+model+'-'+strategy+'-'+str(sig_n)+'->'+str(max_acc), file_local)
                 else:
                     pprint('========WRONG strategy=================')
-                    pprint.pprint('====wrong strategy======'+dataset+'-'+strategy,file_local_trend)
+                    util.write_line('====wrong strategy======'+dataset+'-'+strategy,file_local)
                     pprint('PLESE check!!!==================')
-        pprint.pprint(dict_results)
-        pprint.pprint(dict_results, file_summary_results)
-        file_summary_results.close()
+    pprint.pprint(dict_results)
+    pprint.pprint(dict_results, file_summary_results)
+    file_summary_results.close()
 
 
 if __name__ == '__main__':

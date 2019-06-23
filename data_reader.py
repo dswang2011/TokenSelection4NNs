@@ -393,7 +393,7 @@ def load_data_overall(dataset,file_name="train.csv",test100=False):
 		if test100==True:
 			return texts1[:test_num],texts2[:test_num],labels[:test_num]
 		return texts1,texts2,labels
-	elif dataset in ['RTE','QQP']:
+	elif dataset in ['RTE','QQP','WNLI']:
 		texts1,texts2,labels = load_RTE_data(file_path = output_root+file_name)
 		return texts1,texts2,labels
 	if test100==True:
@@ -408,3 +408,6 @@ def load_data_overall(dataset,file_name="train.csv",test100=False):
 # for i in range(len(X)):
 # 	content = X[i].replace('\t',' ').strip()+'\t'+str(y[i])
 # 	write_content("mr.csv",content+'\n')
+
+# t1,t2,l = load_data_overall('WNLI','train.csv')
+# print('size:',len(t1))

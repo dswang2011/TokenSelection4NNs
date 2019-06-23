@@ -11,6 +11,8 @@ from keras import backend as K
 from keras.layers import Layer,Dense, Concatenate,Subtract,Multiply
 from models.matching import Attention,getOptimizer,precision_batch,identity_loss,MarginLoss,Cosine,Stack
 
+
+
 class TimeHistory(keras.callbacks.Callback):
     def on_train_begin(self, logs={}):
         self.times = []
@@ -78,11 +80,10 @@ class BasicModel(object):
         if self.opt.match_type == 'pointwise':
             q = representation_model(self.question)
             a = representation_model(self.answer)
-            reps = [q,a,Subtract()([q,a]),Multiply()([q,a])]
+            # q,a, q-a, q*a
+            reps = [q,a,keras.layers.Subtract()([q,a]),Multiply()([q,a])]
             reps = Concatenate()(reps)
             output = Dense(self.opt.nb_classes, activation="softmax")(reps)
-
-            # output = Dense(self.opt.nb_classes,activation="softmax")(np.array([sim_score]))
             
             model = Model([self.question,self.answer], output)
             model.summary()
