@@ -88,8 +88,7 @@ class TokenSelection(object):
 			if dataset in self.opt.pair_set.split(","):
 				Noun,Verb,Adjective,Noun_Verb,Noun_Adjective,Verb_Adjective,Noun_Verb_Adjective, \
 				Noun1,Verb1,Adjective1,Noun_Verb1,Noun_Adjective1,Verb_Adjective1,Noun_Verb_Adjective1,labels = \
-					temp[0],temp[1],temp[2],temp[3],temp[4],temp[5],temp[6],\
-					temp[7],temp[8],temp[9],temp[10],temp[11],temp[12],temp[13],temp[14]
+					temp[0],temp[1],temp[2],temp[3],temp[4],temp[5],temp[6],temp[7],temp[8],temp[9],temp[10],temp[11],temp[12],temp[13],temp[14]
 				if POS_category=="Noun":
 					tokens_list=np.array([Noun,Noun1])
 				elif POS_category=="Verb":
@@ -355,8 +354,8 @@ if __name__ == '__main__':
 	# # token selection
 	nlp = StanfordCoreNLP(params.corenlp_root)
 	# # below is where you need to set your data name
-	token_select.token_selection_preparation(nlp = nlp, dataset="WNLI",file_name="train.csv")
-	token_select.token_selection_preparation(nlp = nlp, dataset="WNLI",file_name="test.csv")
+	token_select.token_selection_preparation(nlp = nlp, dataset="GAP",file_name="train.csv")
+	token_select.token_selection_preparation(nlp = nlp, dataset="GAP",file_name="test.csv")
 	nlp.close() # Do not forget to close! The backend server will consume a lot memery.
 
 	# test output some data

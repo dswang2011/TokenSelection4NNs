@@ -381,6 +381,26 @@ def load_RTE_data(file_path,hasHead=0):
 			labels.append(label)
 	return texts1,texts2,labels
 
+def load_MRPC_data(file_path,hasHead=1):
+	texts1,texts2=[],[]
+	labels=[]
+	count_line=0
+	with open(file_path, 'r', encoding='utf8', errors='ignore') as f:
+		for row in f:
+			count_line+=1
+			if count_line==1 and hasHead==1:
+				continue
+			strs = row.split('\t')
+			label = strs[0].strip().lower()
+			if label not in [0,1,'0','1']:
+				print('strange label:',label)
+				continue
+			texts1.append(strs[3].strip())
+			texts2.append(strs[4].strip())
+			labels.append(label)
+	return texts1,texts2,labels
+
+
 def load_data_overall(dataset,file_name="train.csv",test100=False):
 	test_num=5000
 	output_root = "prepared/"+dataset+"/"
@@ -396,6 +416,9 @@ def load_data_overall(dataset,file_name="train.csv",test100=False):
 	elif dataset in ['RTE','QQP','WNLI']:
 		texts1,texts2,labels = load_RTE_data(file_path = output_root+file_name)
 		return texts1,texts2,labels
+	elif dataset in ['MRPC']:
+		texts1,texts2,labels = load_MRPC_data(file_path = output_root+file_name)
+		return texts1,texts2,labels
 	if test100==True:
 		return texts[:test_num],labels[:test_num]
 	return texts,labels
@@ -409,5 +432,5 @@ def load_data_overall(dataset,file_name="train.csv",test100=False):
 # 	content = X[i].replace('\t',' ').strip()+'\t'+str(y[i])
 # 	write_content("mr.csv",content+'\n')
 
-# t1,t2,l = load_data_overall('WNLI','train.csv')
-# print('size:',len(t1))
+t1,t2,l = load_data_overall('MRPC','test.csv')
+print('size:',len(t1))

@@ -443,14 +443,14 @@ def text2tokens_blocks_tree(nlp,text_list,sig_num,customized_tokens=[],idf_dict=
 if __name__ == '__main__':
 
 	###### test #####
-	texts=["Unique, this is sth very un good.  And it is sth fine that is not very important, 1990098 and it is another sth weired like jj very 9900877 pretty and ugly.",
-	"A simple test. haha ",
+	texts=[
 	"We were the No. 1 job creator in America in February and we are now the No. 4 job creator in the last year.",
 	"Property owners in New York City will be fined $250,000 for using \"improper pronouns\" due to new transgender laws.",
 	"Saudi Arabian Racehorse Executed for Being Homosexual",
 	"Ellen DeGeneres Warning Justin Bieber To Get Help,",
 	"President Obama fired Rear Admiral Rick Williams for \"questioning\" the President's purported recent purchase of a mansion in Dubai.",
-	"MacKenzie studied with Bernard Leach from 1949 to 1952. His simple, wheel-thrown functional pottery is heavily influenced by the oriental aesthetic of Shoji Hamada and Kan-jiro Kawai."
+	"MacKenzie studied with Bernard Leach from 1949 to 1952. His simple, wheel-thrown functional pottery is heavily influenced by the oriental aesthetic of Shoji Hamada and Kan-jiro Kawai.",
+	"我只是想试一试中文是什么样子。"
 	]
 
 	nlp = StanfordCoreNLP(r'/home/dongsheng/data/resources/stanford-corenlp-full-2018-10-05')
@@ -460,16 +460,16 @@ if __name__ == '__main__':
 		# fulltext
 		print('fulltext: ',nlp.word_tokenize(txt))
 
-		# # stop word removed
-		# print('stop word removal: ',stopword_removed(nlp,txt))
+		# stop word removed
+		print('stop word removal: ',stopword_removed(nlp,txt))
 
-		# # random selection
-		# for ratio in [0.9,0.8,0.7,0.6,0.5]:
-		# 	print('select_ratio ',ratio,': ',random_select(nlp,txt,select_ratio=ratio))
+		# random selection
+		for ratio in [0.9,0.8,0.7,0.6,0.5]:
+			print('select_ratio ',ratio,': ',random_select(nlp,txt,select_ratio=ratio))
 
-		# #entity
-		# tokens_list = get_token_entity(nlp,txt,customized_tokens=[','])
-		# print('entity: ',tokens_list)
+		#entity
+		tokens_list = get_token_entity(nlp,txt,customized_tokens=[','])
+		print('entity: ',tokens_list)
 
 		# POS
 		# print('Noun: ',get_tokens_POS(nlp,txt,noun_list))
@@ -477,19 +477,19 @@ if __name__ == '__main__':
 		# print('Adjective: ',get_tokens_POS(nlp,txt,adjective_list))
 		# print('N+V: ',get_tokens_POS(nlp,txt,noun_list+verb_list))
 		# print('N+A: ',get_tokens_POS(nlp,txt,noun_list+adjective_list))
-		# print('V+A: ',get_tokens_POS(nlp,txt,verb_list+adjective_list))
+		print('V+A: ',get_tokens_POS(nlp,txt,verb_list+adjective_list))
 		# print('N+V+A: ',get_tokens_POS(nlp,txt,noun_list+verb_list+adjective_list))
 
-		# # dependency tree cutting
-		# for cut in [1,2,3]:
-		# 	res_toknes = get_token_dependency(nlp,txt,cut)
-		# 	print('cut: ',cut,res_toknes)
+		# dependency tree cutting
+		for cut in [1,2,3]:
+			res_toknes = get_token_dependency(nlp,txt,cut)
+			print('cut: ',cut,res_toknes)
 
 		# triple
 		# print(nlp.word_tokenize(triple_text))
 
 		# token blocks selection
-		# idf_dict = get_idf_dict(texts)
+		idf_dict = get_idf_dict(texts)
 	# outside the loop, token block selection
 	tokens_list,tokens_list_pos = text2tokens_blocks_tree(nlp,texts,sig_num=3,customized_tokens=['aaac','bbbc'])
 	print(tokens_list)
