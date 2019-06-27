@@ -93,17 +93,17 @@ def train_for_document():
 
     models = [
     	#CNN parameters
-    	# {
-     #    "dropout_rate" : [0.3],#,0.5,0.75,0.8,1]    ,
-     #    "model": ["cnn"],
-     #    # "filter_size":[30],
-     #    "filter_size":[30,50],
-     #    "lr":[0.1,0.01,0.001],
-     #    # "batch_size":[32],
-     #    "batch_size":[32,64],
-     #    # "validation_split":[0.05,0.1,0.15,0.2],
-     #    "validation_split":[0.1],
-     #    },
+    	{
+        "dropout_rate" : [0.3],#,0.5,0.75,0.8,1]    ,
+        "model": ["cnn"],
+        # "filter_size":[30],
+        "filter_size":[30],
+        "lr":[0.001],
+        # "batch_size":[32],
+        "batch_size":[32,64],
+        # "validation_split":[0.05,0.1,0.15,0.2],
+        "validation_split":[0.1],
+        },
     	# RNN parameters
         {
             "cell_type": ["gru"],
@@ -112,7 +112,7 @@ def train_for_document():
             "model": ["bilstm_2L"],
             # "contatenate":[0],
             "lr": [0.001],
-            "batch_size": [64],
+            "batch_size": [32],
             # "validation_split":[0.05,0.1,0.15,0.2],
             "validation_split": [0.1],
         }
@@ -149,13 +149,13 @@ def train_for_document():
             dict_strategies = {
                                 "fulltext": {},
                                 "stopword": {},
-                                "random": {},
-                                "POS":{},
-                               "dependency":{},
+                                # "random": {},
+                                # "POS":{},
+                               # "dependency":{},
                                "entity":{},
                                "IDF":{},
-                               "IDF_blocks":{},
-                               "IDF_blocks_pos":{}	# sig_num = [3,4,5,6,7]
+                               # "IDF_blocks":{},
+                               # "IDF_blocks_pos":{}	# sig_num = [3,4,5,6,7]
                                }
 
             for strategy in dict_strategies:
