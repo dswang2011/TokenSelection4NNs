@@ -64,7 +64,36 @@ class BasicModel(object):
         filename = os.path.join( dirname,filename + "_" + self.__class__.__name__ +".h5")
         self.model.save(filename)
         return filename
-    
+
+
+    def get_relation_model(self,opt):
+        # representation_model = self.model
+        # representation_model.layers.pop()
+        # representation_model = Model(inputs=self.model.input, output=self.model.get_layer('previous_layer').output)
+        representation_model = Model(inputs=self.model.input, output=self.model.layers[-2].output)
+        
+
+        self.blocks = Input(shape=(self.opt.max_sequence_length,), dtype='int32')
+        self.entity1 = Input(shape=(self.opt.max_sequence_length,), dtype='int32')
+        self.entity2 = Input(shape=(self.opt.max_sequence_length,), dtype='int32')
+
+        b = representation_model(self.blocks)
+        e1 = representation_model(self.entity1)
+        e2 = representation_model(self.entity2)
+
+        b_e1 = keras.layers.Subtract()([b,e1])
+        b_e2 = keras.layers.Subtract()([b_e1,e2])
+        # q,a, q-a, q*a
+        reps = [b,e1,e2,b_e2]
+        reps = Concatenate()(reps)
+        output = Dense(self.opt.nb_classes, activation="softmax")(reps)
+        
+        model = Model([self.question,self.answer], output)
+        model.summary()
+        model.compile(loss = "categorical_hinge",  optimizer = getOptimizer(name=self.opt.optimizer,lr=self.opt.lr), metrics=["acc"])
+            
+        return model
+
     def get_pair_model(self,opt):
         # representation_model = self.model
         # representation_model.layers.pop()
@@ -106,6 +135,10 @@ class BasicModel(object):
     
     def train_matching(self,train,dev=None,dirname="saved_model",strategy=None,dataset=''):
         self.model =  self.get_pair_model(self.opt)
+        return self.train(train,dev=dev,dirname=dirname,strategy=strategy,dataset=dataset)
+
+    def train_relation(self,train,dev=None,dirname="saved_model",strategy=None,dataset=''):
+        self.model =  self.get_relation_model(self.opt)
         return self.train(train,dev=dev,dirname=dirname,strategy=strategy,dataset=dataset)
 
 

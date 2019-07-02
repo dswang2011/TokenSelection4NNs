@@ -97,8 +97,8 @@ def train_for_document():
         "dropout_rate" : [0.3],#,0.5,0.75,0.8,1]    ,
         "model": ["cnn"],
         # "filter_size":[30],
-        "filter_size":[30],
-        "lr":[0.001],
+        "filter_size":[30,50],
+        "lr":[0.1,0.0001],
         # "batch_size":[32],
         "batch_size":[32,64],
         # "validation_split":[0.05,0.1,0.15,0.2],
@@ -111,8 +111,8 @@ def train_for_document():
             "dropout_rate": [0.2],  # ,0.5,0.75,0.8,1]    ,
             "model": ["bilstm_2L"],
             # "contatenate":[0],
-            "lr": [0.001],
-            "batch_size": [32],
+            "lr": [0.1,0.0001],
+            "batch_size": [32,64],
             # "validation_split":[0.05,0.1,0.15,0.2],
             "validation_split": [0.1],
         }
@@ -133,7 +133,7 @@ def train_for_document():
     file_local = "local_results_2.txt"
 
     dict_results = {}
-    datasets = ["MRPC"]
+    datasets = ["MR"]
     for dataset in datasets:
         for grid_parameters in models:
             # Set strategy here: strategy = fulltext, stopword, random, POS, dependency, entity ;
@@ -144,18 +144,18 @@ def train_for_document():
             selected_ratios = [0.9,0.8,0.7,0.6]
             # selected_ratios = [0.8]
             cuts = [1,2]
-            sig_num = [3,4,5,6,7]
+            sig_num = [3,4,5,6,7,8]
 
             dict_strategies = {
-                                "fulltext": {},
-                                "stopword": {},
+                                # "fulltext": {},
+                                # "stopword": {},
                                 # "random": {},
                                 # "POS":{},
                                # "dependency":{},
-                               "entity":{},
-                               "IDF":{},
+                               # "entity":{},
+                               # "IDF":{},
                                # "IDF_blocks":{},
-                               # "IDF_blocks_pos":{}	# sig_num = [3,4,5,6,7]
+                               "IDF_blocks_pos":{}	# sig_num = [3,4,5,6,7]
                                }
 
             for strategy in dict_strategies:

@@ -401,6 +401,25 @@ def load_MRPC_data(file_path,hasHead=1):
 	return texts1,texts2,labels
 
 
+def load_relation_data(file_name="train.csv",hasHead=0):
+	texts,entity1,entity2,labels=[],[],[],[]
+	labels=[]
+	count_line=0
+	with open(file_path, 'r', encoding='utf8', errors='ignore') as f:
+		for row in f:
+			count_line+=1
+			if count_line==1 and hasHead==1:
+				continue
+			strs = row.split('\t')
+			label = strs[2].strip().lower()
+			
+			texts.append(strs[3].strip())
+			entity1.append(strs[0].strip())
+			entity2.append(strs[1].strip())
+			labels.append(label)
+	return texts,entity1,entity2,labels	
+
+
 def load_data_overall(dataset,file_name="train.csv",test100=False):
 	test_num=5000
 	output_root = "prepared/"+dataset+"/"

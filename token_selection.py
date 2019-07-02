@@ -171,7 +171,7 @@ class TokenSelection(object):
 		file_path = os.path.join(output_root,file_name)
 		print('load data:',file_path)
 		if dataset in self.opt.pair_set.split(","):
-			texts,texts2,labels = data_reader.load_data_overall(dataset,file_name,test100=False)	# set with 1 if there is head
+			texts,texts2,labels = data_reader.load_data_overall(dataset,file_name,test100=True)	# set with 1 if there is head
 			print('=== this is a paired text dataset ===')
 		else:
 			texts,labels = data_reader.load_data_overall(dataset,file_name)	# set with 1 if there is head
@@ -354,8 +354,8 @@ if __name__ == '__main__':
 	# # token selection
 	nlp = StanfordCoreNLP(params.corenlp_root)
 	# # below is where you need to set your data name
-	token_select.token_selection_preparation(nlp = nlp, dataset="GAP",file_name="train.csv")
-	token_select.token_selection_preparation(nlp = nlp, dataset="GAP",file_name="test.csv")
+	token_select.token_selection_preparation(nlp = nlp, dataset="factcheck",file_name="train.csv")
+	token_select.token_selection_preparation(nlp = nlp, dataset="factcheck",file_name="test.csv")
 	nlp.close() # Do not forget to close! The backend server will consume a lot memery.
 
 	# test output some data
