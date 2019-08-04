@@ -12,7 +12,7 @@ from models.Transformer import Transformer
 def setup(opt):
     
     if opt.contatenate==1:
-            opt.max_sequence_length = opt.max_sequence_length_contatenate  
+            opt.max_sequence_length = opt.max_sequence_length_long  
             
     if opt.model == "lstm_2L":
         model = LSTM2L(opt)
@@ -24,6 +24,8 @@ def setup(opt):
         model = BiLSTM2L(opt)
     elif opt.model == "transformer":
         model = Transformer(opt)
+    elif opt.model == "bilstm_2inputs":
+        model = BiLSTM_2inputs(opt)
     else:
         raise Exception("model not supported: {}".format(opt.model))
 

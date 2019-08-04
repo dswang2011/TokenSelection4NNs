@@ -14,10 +14,7 @@ class CNN(BasicModel):
             x = Dropout(self.opt.dropout_rate)(x)
             representions.append(x)
         x = Concatenate()(representions)
-#        x = Dense(128, activation='relu')(x)
-#        x = Dense(128, activation='relu')(x)
-#        x = Dense(128, activation='relu')(x)
-        x = Dense(100,activation='relu')(x)
+        x = Dense(100,activation='relu',name='previous_layer')(x)
         preds = Dense(self.opt.nb_classes, activation='softmax')(x)   # 3 catetory
 
         return Model(sequence_input, preds)

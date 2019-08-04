@@ -2,7 +2,7 @@
 import os
 #task: 1. get tokenized diction; 2. 
 
-import stanfordnlp
+#import stanfordnlp
 import NLP
 import numpy as np
 import codecs
@@ -276,7 +276,8 @@ def load_data(tsv_file_path,mode= "train"):
     return np.array(res)
 
 import csv
-def load_classification_data(file_path,hasHead=0):
+### uncomment this to use for the IMDB/MR dataset ##########
+def load_bi_class_data(file_path,hasHead=0):
 	texts=[]
 	labels=[]
 	with open(file_path, encoding='utf8') as f:
@@ -292,17 +293,163 @@ def load_classification_data(file_path,hasHead=0):
 
 	return [texts,labels]
 
+#### THIS IS TO RUN FOR GAP ######
+def load_classification_data(file_path,hasHead=0):
+	texts=[]
+	labels=[]
+	with open(file_path, encoding='utf8') as f:
+		csv_reader = csv.reader(f, delimiter='\t')
+		for row in csv_reader:
+			texts.append(row[0].strip())
+			# label = '0'
+			for i in range(1,len(row)):
+			# 	if row[i].strip() in ['0','1',0,1]:
+				label = row[i].strip()
+				# print(label)
+			labels.append(label)
+	# print('labels:',labels)
+	return [texts,labels]
+
+
 def load_pair_data(file_path,hasHead=0):
 	texts1,texts2=[],[]
 	labels=[]
 	with open(file_path, encoding='utf8') as f:
 		csv_reader = csv.reader(f, delimiter='\t')
 		for row in csv_reader:
-			texts1.append(row[0].strip())
-			texts2.append(row[1].strip())
-            
-			labels.append(row[2].strip())
-	
-	return [[texts1,texts2],labels]
+			claim_id = row[0].strip()
+			if 'pomt' not in claim_id:
+				continue
+			label = row[2].strip().lower()
+			if label not in ['true','false','no flip','half-true','pants on fire!','half flip','mostly true','full flop','mostly false']:
+				continue
+			max_snippets = np.maximum(5,len(row)-3)
+			texts1.append(row[1].strip())
+			text2 = ' '.join(row[3:max_snippets])
+			texts2.append(text2.strip())
+			labels.append(label)
+	return texts1,texts2,labels
+
+def load_triple_data(file_path):
+	triples=[]
+	labels=[]
+	with open(file_path,'r',encoding='utf8') as f:
+		for line in f:
+			strs = line.split('\t')
+			triples.append(strs[0].strip())
+			label = '0'
+			for i in range(1,len(strs)):
+				if strs[i].strip() in ['0','1']:
+					label = strs[i].strip()
+			labels.append(label)
+	return [triples,labels]
 
 
+def get_texts_from_folder(directory):
+	texts = []
+	for filename in os.listdir(directory):
+		if filename.endswith(".txt"):
+			file_path = os.path.join(directory, filename)
+			file = open(file_path,'r')
+			lines = file.readlines()
+			texts.append(' '.join(lines).replace('\n',''))
+	return texts
+# load MR
+from sklearn.utils import shuffle
+def load_mr_data(folder):
+	pos_texts = get_texts_from_folder(folder+'/'+'pos/')
+	neg_texts = get_texts_from_folder(folder+'/'+'neg/')
+	pos_labels = np.ones(len(pos_texts),dtype=int)
+	neg_labels = np.zeros(len(neg_texts),dtype=int)
+	texts = pos_texts+neg_texts
+	labels = pos_labels.tolist()+neg_labels.tolist()
+	X,y = shuffle(texts, labels, random_state=0)
+	return [X,y]
+
+def load_RTE_data(file_path,hasHead=0):
+	texts1,texts2=[],[]
+	labels=[]
+	with open(file_path, 'r', encoding='utf8', errors='ignore') as f:
+		for row in f:
+			strs = row.split('\t')
+			label = strs[3].strip().lower()
+			if label not in ['not_entailment','entailment','0','1']:
+				print('strange label:',label)
+				continue
+			texts1.append(strs[1].strip())
+			texts2.append(strs[2].strip())
+			labels.append(label)
+	return texts1,texts2,labels
+
+def load_MRPC_data(file_path,hasHead=1):
+	texts1,texts2=[],[]
+	labels=[]
+	count_line=0
+	with open(file_path, 'r', encoding='utf8', errors='ignore') as f:
+		for row in f:
+			count_line+=1
+			if count_line==1 and hasHead==1:
+				continue
+			strs = row.split('\t')
+			label = strs[0].strip().lower()
+			if label not in [0,1,'0','1']:
+				print('strange label:',label)
+				continue
+			texts1.append(strs[3].strip())
+			texts2.append(strs[4].strip())
+			labels.append(label)
+	return texts1,texts2,labels
+
+
+def load_relation_data(file_name="train.csv",hasHead=0):
+	texts,entity1,entity2,labels=[],[],[],[]
+	labels=[]
+	count_line=0
+	with open(file_path, 'r', encoding='utf8', errors='ignore') as f:
+		for row in f:
+			count_line+=1
+			if count_line==1 and hasHead==1:
+				continue
+			strs = row.split('\t')
+			label = strs[2].strip().lower()
+			
+			texts.append(strs[3].strip())
+			entity1.append(strs[0].strip())
+			entity2.append(strs[1].strip())
+			labels.append(label)
+	return texts,entity1,entity2,labels	
+
+
+def load_data_overall(dataset,file_name="train.csv",test100=False):
+	test_num=5000
+	output_root = "prepared/"+dataset+"/"
+	if dataset in ['GAP']:
+		texts,labels = load_classification_data(file_path=output_root+file_name)
+	elif dataset in ['MR','IMDB']:
+		texts,labels = load_bi_class_data(file_path=output_root+file_name)
+	elif dataset in ['factcheck']:
+		texts1,texts2,labels = load_pair_data(file_path = output_root+file_name)
+		if test100==True:
+			return texts1[:test_num],texts2[:test_num],labels[:test_num]
+		return texts1,texts2,labels
+	elif dataset in ['RTE','QQP','WNLI']:
+		texts1,texts2,labels = load_RTE_data(file_path = output_root+file_name)
+		return texts1,texts2,labels
+	elif dataset in ['MRPC']:
+		texts1,texts2,labels = load_MRPC_data(file_path = output_root+file_name)
+		return texts1,texts2,labels
+	if test100==True:
+		return texts[:test_num],labels[:test_num]
+	return texts,labels
+
+# Process MR 
+# def write_content(file_path,content):
+# 	with open(file_path,'a',encoding='utf8') as fw:
+# 		fw.write(content)
+# X,y = load_mr_data("/home/dongsheng/code/TokenSelection4NNs/prepared/MR/txt_sentoken/")
+# for i in range(len(X)):
+# 	content = X[i].replace('\t',' ').strip()+'\t'+str(y[i])
+# 	write_content("mr.csv",content+'\n')
+
+t1,t2,l = load_data_overall('MRPC','test.csv')
+print('size:',len(t1))
