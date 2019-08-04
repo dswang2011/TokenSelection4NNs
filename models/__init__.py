@@ -5,6 +5,7 @@ from models.LSTM2L import LSTM2L
 from models.CNN import CNN
 from models.BiLSTM import BiLSTM
 from models.BiLSTM2L import BiLSTM2L
+from models.Transformer import Transformer
 
 
 
@@ -21,6 +22,8 @@ def setup(opt):
         model = BiLSTM(opt)
     elif opt.model == "bilstm_2L":
         model = BiLSTM2L(opt)
+    elif opt.model == "transformer":
+        model = Transformer(opt)
     else:
         raise Exception("model not supported: {}".format(opt.model))
 

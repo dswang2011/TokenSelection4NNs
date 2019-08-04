@@ -24,13 +24,13 @@ class BasicModel(object):
         
         filename = os.path.join( dirname,  "best_model_" + self.__class__.__name__+".h5" )
         callbacks = [EarlyStopping(monitor='val_loss', patience=5),
-             ModelCheckpoint(filepath=filename, monitor='val_loss', save_best_only=True)]
+             ModelCheckpoint(filepath=filename, monitor='val_loss', save_best_only=True,save_weights_only=True)]
         if dev is None:
             history = self.model.fit(x_train,y_train,batch_size=self.opt.batch_size,epochs=self.opt.epoch_num,callbacks=callbacks,validation_split=self.opt.validation_split,shuffle=True)
         else:
             x_val, y_val = dev
             history = self.model.fit(x_train,y_train,batch_size=self.opt.batch_size,epochs=self.opt.epoch_num,callbacks=callbacks,validation_data=(x_val, y_val),shuffle=True) 
-        os.rename(filename,os.path.join( dirname,  str(min(history.history["acc"])) +"_" + self.__class__.__name__+"_"+self.opt.to_string()+".h5" ))
+        os.rename(filename,os.path.join( dirname,  str(max(history.history["val_acc"])) +"_" + self.__class__.__name__+"_"+self.opt.to_string()+".h5" ))
         
        
     def predict(self,x_test):

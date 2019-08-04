@@ -1,4 +1,4 @@
-
+#https://github.com/Lsdefine/attention-is-all-you-need-keras/blob/master/transformer.py
 # -*- coding: utf-8 -*-
 from  Params import Params
 import argparse
@@ -36,12 +36,15 @@ def train_for_document():
         "cell_type":["gru"], 
         "hidden_unit_num":[50],
         "dropout_rate" : [0.2],#,0.5,0.75,0.8,1]    ,
-        "model": [ "bilstm"],
+        "model": [ "transformer"],
         # "contatenate":[0],
         "lr":[0.001],
         "batch_size":[64],
         # "validation_split":[0.05,0.1,0.15,0.2],
         "validation_split":[0.1],
+        "layers" : [1,2,4],
+        "n_head" : [4,6,8,12],
+        "d_inner_hid" : [128,256,512]
     }
 
     token_select = TokenSelection(params)
