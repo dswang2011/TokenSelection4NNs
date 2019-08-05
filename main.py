@@ -133,7 +133,7 @@ def train_for_document():
     file_local = "local_results_2.txt"
 
     dict_results = {}
-    datasets = ["MR"]
+    datasets = ["factcheck"]
     for dataset in datasets:
         for grid_parameters in models:
             # Set strategy here: strategy = fulltext, stopword, random, POS, dependency, entity ;
@@ -147,7 +147,7 @@ def train_for_document():
             sig_num = [3,4,5,6,7,8]
 
             dict_strategies = {
-                                # "fulltext": {},
+                                "fulltext": {},
                                 # "stopword": {},
                                 # "random": {},
                                 # "POS":{},
@@ -155,7 +155,7 @@ def train_for_document():
                                # "entity":{},
                                # "IDF":{},
                                # "IDF_blocks":{},
-                               "IDF_blocks_pos":{}	# sig_num = [3,4,5,6,7]
+                               # "IDF_blocks_pos":{}	# sig_num = [3,4,5,6,7]
                                }
 
             for strategy in dict_strategies:

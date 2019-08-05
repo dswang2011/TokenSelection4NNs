@@ -72,3 +72,5 @@ for idxValue in nounIndices:
         if token.dep_ == 'dobj' or token.dep_ == 'pobj' or token.pos_ == "PRON":
             print(token.text)
             
+
+
