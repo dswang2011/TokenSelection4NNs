@@ -34,7 +34,7 @@ class BasicModel(object):
         return None
 
     
-    def train(self,train,dev=None,dirname="saved_model",strategy=None,dataset=''):
+    def train(self,train,dev=None,dirname="saved_model",strategy='strategy',dataset=''):
         x_train,y_train = train
 
         time_callback = TimeHistory()
