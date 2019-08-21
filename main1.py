@@ -1,4 +1,5 @@
-#https://github.com/Lsdefine/attention-is-all-you-need-keras/blob/master/transformer.py
+# -*- coding: utf-8 -*-
+
 # -*- coding: utf-8 -*-
 from  Params import Params
 import argparse
@@ -10,6 +11,10 @@ import numpy as np
 import itertools
 from token_selection import TokenSelection
 
+from sklearn.utils import shuffle
+import pprint
+import util
+
 params = Params()
 parser = argparse.ArgumentParser(description='Running Gap.')
 parser.add_argument('-config', action = 'store', dest = 'config', help = 'please enter the config path.',default='config/config.ini')
@@ -18,59 +23,87 @@ parser.add_argument('-gpu', action = 'store', dest = 'gpu', help = 'please enter
 args = parser.parse_args()
 params.parse_config(args.config)
 from sklearn.metrics import f1_score,confusion_matrix,accuracy_score,log_loss
+import time
+
+def draw_result(predicted, val):
+    print('loss:',log_loss(val,predicted)) 
+    
+    
+    ground_label = np.array(val).argmax(axis=1)
+    predicted_label = np.array(predicted).argmax(axis=1)
+    print('F1:',f1_score(predicted_label ,ground_label,average='macro'))
+    print('accuracy:',accuracy_score(predicted_label ,ground_label))
+    print(confusion_matrix(predicted_label ,ground_label))
+
+
+
+def grid_search_parameters(grid_parameters, strategy, train, test, dict_results, dataset):
+    parameters = [arg for index, arg in enumerate(itertools.product(*grid_parameters.values())) if
+                  index % args.gpu_num == args.gpu]
+    val_acc = 0
+    max_acc = 0
+    local_time=0.0
+    for parameter in parameters:
+        print(parameter)
+        params.setup(zip(grid_parameters.keys(), parameter))
+        model = models.setup(params)
+        if dataset in params.pair_set.split(","):
+            val_acc, time_spent, model = model.train_matching(train, dev=test, strategy=strategy,dataset=dataset)  ### strategy here is just for printing the type
+        else:    
+            val_acc, time_spent, model = model.train(train, dev=test, strategy=strategy,dataset=dataset)  ### strategy here is just for printing the type
+        if float(val_acc) > max_acc:
+            max_acc=float(val_acc)
+            local_time=time_spent
+        if dataset not in dict_results:
+            dict_results[dataset] = {}
+        if model not in dict_results[dataset]:
+            dict_results[dataset][model] = {}
+        if strategy not in dict_results[dataset][model]:
+            dict_results[dataset][model][strategy] = {"val_acc":val_acc, "time":time_spent}
+
+        if val_acc > dict_results[dataset][model][strategy]['val_acc']:
+            dict_results[dataset][model][strategy]['val_acc'] = val_acc
+            dict_results[dataset][model][strategy]['time'] = time_spent
+    return model,max_acc,local_time
 
 
 def train_for_document():
-    grid_parameters ={
-        "cell_type":["lstm","gru","rnn"], 
-        "hidden_unit_num":[20,50,75,100,200],
-        "dropout_rate" : [0.1,0.2,0.3],#,0.5,0.75,0.8,1]    ,
-        "model": ["lstm_2L", "bilstm", "bilstm_2L"],
-        "batch_size":[16,32,64],
-        "validation_split":[0.05,0.1,0.15,0.2],
-        "contatenate":[0,1],
-        "lr":[0.001,0.01]       
-    }
+    # grid_parameters ={
+    #     "cell_type":["lstm","gru","rnn"], 
+    #     "hidden_unit_num":[20,50,75,100,200],
+    #     "dropout_rate" : [0.1,0.2,0.3],#,0.5,0.75,0.8,1]    ,
+    #     "model": ["lstm_2L", "bilstm", "bilstm_2L"],
+    #     "batch_size":[16,32,64],
+    #     "validation_split":[0.05,0.1,0.15,0.2],
+    #     "contatenate":[0,1],
+    #     "lr":[0.001,0.01]       
+    # }
     # fix cell typ,a nd try different RNN models
-    grid_parameters ={
-        "cell_type":["gru"], 
-        "hidden_unit_num":[50],
-        "dropout_rate" : [0.2],#,0.5,0.75,0.8,1]    ,
-        "model": [ "transformer"],
-        # "contatenate":[0],
-        "lr":[0.001],
-        "batch_size":[64],
+    # grid_parameters =
+    # {
+    #     "cell_type":["gru"],
+    #     "hidden_unit_num":[50],
+    #     "dropout_rate" : [0.2],#,0.5,0.75,0.8,1]    ,
+    #     "model": [ "bilstm"],
+    #     # "contatenate":[0],
+    #     "lr":[0.001],
+    #     "batch_size":[32,64],
+    #     # "validation_split":[0.05,0.1,0.15,0.2],
+    #     "validation_split":[0.1],
+    # }
+
+    models = [
+    	#CNN parameters
+    	{
+        "dropout_rate" : [0.3],#,0.5,0.75,0.8,1]    ,
+        "model": ["cnn"],
+        # "filter_size":[30],
+        "filter_size":[30,50],
+        "lr":[0.1,0.0001],
+        # "batch_size":[32],
+        "batch_size":[32,64],
         # "validation_split":[0.05,0.1,0.15,0.2],
         "validation_split":[0.1],
-        "layers" : [1,2,4],
-        "n_head" : [4,6,8,12],
-        "d_inner_hid" : [128,256,512]
-    }
-
-    token_select = TokenSelection(params)
-    train,test = token_select.get_train(dataset="IMDB",stragety="stopword",POS_category="Noun")
-   
-#    val_uncontatenated = process.get_test()
-    parameters= [arg for index,arg in enumerate(itertools.product(*grid_parameters.values())) if index%args.gpu_num==args.gpu]
-    for parameter in parameters:
-        print(parameter)
-        params.setup(zip(grid_parameters.keys(),parameter))        
-        model = models.setup(params)
-        model.train(train,dev=test)
-
-def train_for_document_pair():
-    # fix cell typ,a nd try different RNN models
-    grid_parameters ={
-        "cell_type":["gru"], 
-        "hidden_unit_num":[200],
-        "dropout_rate" : [0.2],#,0.5,0.75,0.8,1]    ,
-        "model": ["lstm_2L", "bilstm"],
-        # "contatenate":[0],
-        "lr":[0.001,0.01],
-        "batch_size":[128],
-        # "validation_split":[0.05,0.1,0.15,0.2],
-        "validation_split":[0.1],
-<<<<<<< HEAD
         },
     	# RNN parameters
         {
@@ -101,7 +134,7 @@ def train_for_document_pair():
     file_local = "local_results_2.txt"
 
     dict_results = {}
-    datasets = ["factcheck"]
+    datasets = ["MR"]
     for dataset in datasets:
         for grid_parameters in models:
             # Set strategy here: strategy = fulltext, stopword, random, POS, dependency, entity ;
@@ -115,7 +148,7 @@ def train_for_document_pair():
             sig_num = [3,4,5,6,7,8]
 
             dict_strategies = {
-                                "fulltext": {},
+                                # "fulltext": {},
                                 # "stopword": {},
                                 # "random": {},
                                 # "POS":{},
@@ -123,7 +156,7 @@ def train_for_document_pair():
                                # "entity":{},
                                # "IDF":{},
                                # "IDF_blocks":{},
-                               # "IDF_blocks_pos":{}	# sig_num = [3,4,5,6,7]
+                               "IDF_blocks_pos":{}	# sig_num = [3,4,5,6,7]
                                }
 
             for strategy in dict_strategies:
@@ -168,24 +201,7 @@ def train_for_document_pair():
     pprint.pprint(dict_results, file_summary_results)
     file_summary_results.close()
 
-=======
-    }
-    token_select = TokenSelection(params)
-    # process the dataset
-    train = token_select.get_train(dataset="trec",stragety="fulltext",POS_category="Noun")
-   
-#    val_uncontatenated = process.get_test()
-    parameters= [arg for index,arg in enumerate(itertools.product(*grid_parameters.values())) if index%args.gpu_num==args.gpu]
-    for parameter in parameters:
-        print(parameter)
-        params.setup(zip(grid_parameters.keys(),parameter))        
-        model = models.setup(params)
-        model.train_matching(train,dev=test)
->>>>>>> 30d2f29d544b3952ad92a79b966339ddc4f79fd5
 
 if __name__ == '__main__':
-
+    # train_for_document_pair()
     train_for_document()
-
-
-    
