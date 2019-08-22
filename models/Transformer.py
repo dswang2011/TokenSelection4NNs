@@ -180,9 +180,8 @@ def GetSubMask(s):
 class SelfAttention():
 	def __init__(self, d_model, d_inner_hid, n_head, layers=6, dropout=0.1):
 		self.layers = [EncoderLayer(d_model, d_inner_hid, n_head, dropout) for _ in range(layers)]
-	def __call__(self, src_emb, src_seq, return_att=False, active_layers=999):
+	def __call__(self, src_emb, mask, return_att=False, active_layers=999):
 		if return_att: atts = []
-		mask = Lambda(lambda x:K.cast(K.greater(x, 0), 'float32'))(src_seq)
 		x = src_emb		
 		for enc_layer in self.layers[:active_layers]:
 			x, att = enc_layer(x, mask)
@@ -191,26 +190,30 @@ class SelfAttention():
     
 class Transformer(BasicModel):
 
-    def get_model(self,opt, active_layers=999) :   
+    def get_model(self,opt) :   
+        active_layers=999
         pos_emb = PosEncodingLayer(opt.max_sequence_length, opt.embedding_dim)# if self.src_loc_info else None
         emb_dropout = Dropout(opt.dropout_rate)
 #        i_word_emb = Embedding(opt.max_sequence_length, d_emb)
         i_word_emb = Embedding(len(opt.word_index) + 1,opt.embedding_dim,weights=[opt.embedding_matrix],input_length=opt.max_sequence_length,trainable=True)
         encoder = SelfAttention(opt.embedding_dim, opt.d_inner_hid, opt.n_head, opt.layers, opt.dropout_rate)
-        src_seq = Input(shape=(None,), dtype='int32')
+#        src_seq = Input(shape=(None,), dtype='int32')
+        src_seq = Input(shape=(opt.max_sequence_length,), dtype='int32')
         src_emb = i_word_emb(src_seq)
     
         if True: 
             src_emb = add_layer([src_emb, pos_emb(src_seq)])
     
         src_emb = emb_dropout(src_emb)
-    
-        enc_output = encoder(src_emb, src_seq, active_layers=active_layers)
+        mask = Lambda(lambda x:K.cast(K.greater(x, 0), 'float32'))(src_seq)
+        enc_output = encoder(src_emb, mask, active_layers=active_layers)
         meaner=Lambda(lambda x: K.mean(x, axis=-2) )
         mean_output= meaner(enc_output)
         preds = Dense(opt.nb_classes, activation='softmax')(mean_output)   # 3 catetory
     
         return Model(src_seq, preds)
+    def __init__(self,opt): 
+        super(Transformer, self).__init__(opt)
 
 if __name__=="__main__":
     
