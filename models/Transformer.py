@@ -195,7 +195,7 @@ class Transformer(BasicModel):
         pos_emb = PosEncodingLayer(opt.max_sequence_length, opt.embedding_dim)# if self.src_loc_info else None
         emb_dropout = Dropout(opt.dropout_rate)
 #        i_word_emb = Embedding(opt.max_sequence_length, d_emb)
-        i_word_emb = Embedding(len(opt.word_index) + 1,opt.embedding_dim,weights=[opt.embedding_matrix],input_length=opt.max_sequence_length,trainable=False)
+        i_word_emb = Embedding(len(opt.word_index) + 1,opt.embedding_dim,weights=[opt.embedding_matrix],input_length=opt.max_sequence_length,trainable=True)
         encoder = SelfAttention(opt.embedding_dim, opt.d_inner_hid, opt.n_head, opt.layers, opt.dropout_rate)
         src_seq = Input(shape=(None,), dtype='int32')
         src_emb = i_word_emb(src_seq)

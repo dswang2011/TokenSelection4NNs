@@ -94,28 +94,31 @@ def train_for_document():
 
     models = [
     	#CNN parameters
-    	{
-        "dropout_rate" : [0.3],#,0.5,0.75,0.8,1]    ,
-        "model": ["cnn"],
-        # "filter_size":[30],
-        "filter_size":[30,50],
-        "lr":[0.1,0.0001],
-        # "batch_size":[32],
-        "batch_size":[32,64],
-        # "validation_split":[0.05,0.1,0.15,0.2],
-        "validation_split":[0.1],
-        },
+    	# {
+     #    "dropout_rate" : [0.3],#,0.5,0.75,0.8,1]    ,
+     #    "model": ["cnn"],
+     #    # "filter_size":[30],
+     #    "filter_size":[30,50],
+     #    "lr":[0.1,0.0001],
+     #    # "batch_size":[32],
+     #    "batch_size":[32,64],
+     #    # "validation_split":[0.05,0.1,0.15,0.2],
+     #    "validation_split":[0.1],
+     #    },
     	# RNN parameters
         {
             "cell_type": ["gru"],
             "hidden_unit_num": [100],
-            "dropout_rate": [0.2],  # ,0.5,0.75,0.8,1]    ,
-            "model": ["bilstm_2L"],
+            "dropout_rate": [0.2],  # ,0.5,0.75,0.8,1],
+            "model": ["transformer"],
             # "contatenate":[0],
-            "lr": [0.1,0.0001],
+            "lr": [0.01,0.001],
             "batch_size": [32,64],
             # "validation_split":[0.05,0.1,0.15,0.2],
             "validation_split": [0.1],
+            "layers" : [1],
+        	"n_head" : [8],
+        	"d_inner_hid" : [256]
         }
     ]
     # grid_parameters ={
@@ -134,7 +137,7 @@ def train_for_document():
     file_local = "local_results_2.txt"
 
     dict_results = {}
-    datasets = ["MR"]
+    datasets = ["MRPC"]
     for dataset in datasets:
         for grid_parameters in models:
             # Set strategy here: strategy = fulltext, stopword, random, POS, dependency, entity ;
@@ -148,14 +151,14 @@ def train_for_document():
             sig_num = [3,4,5,6,7,8]
 
             dict_strategies = {
-                                # "fulltext": {},
-                                # "stopword": {},
-                                # "random": {},
-                                # "POS":{},
-                               # "dependency":{},
-                               # "entity":{},
-                               # "IDF":{},
-                               # "IDF_blocks":{},
+                                "fulltext": {},
+                                "stopword": {},
+                                "random": {},
+                                "POS":{},
+                               "dependency":{},
+                               "entity":{},
+                               "IDF":{},
+                               "IDF_blocks":{},
                                "IDF_blocks_pos":{}	# sig_num = [3,4,5,6,7]
                                }
 

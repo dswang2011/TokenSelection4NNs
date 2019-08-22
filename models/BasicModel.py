@@ -40,13 +40,13 @@ class BasicModel(object):
         time_callback = TimeHistory()
 
         filename = os.path.join(dirname,strategy+'_'+dataset+"_best_model_"+self.__class__.__name__+".h5")
-        callbacks = [EarlyStopping(monitor='val_loss', patience=5),
+        callbacks = [EarlyStopping(monitor='val_loss', patience=7),
 
              ModelCheckpoint(filepath=filename, monitor='val_loss', save_best_only=True,save_weights_only=True), time_callback]
         if dev is None:
             history = self.model.fit(x_train,y_train,batch_size=self.opt.batch_size,epochs=self.opt.epoch_num,callbacks=callbacks,validation_split=self.opt.validation_split,shuffle=True)
         else:
-            x_val, y_val = dev
+            x_val, y_val = dev 
             history = self.model.fit(x_train,y_train,batch_size=self.opt.batch_size,epochs=self.opt.epoch_num,callbacks=callbacks,validation_data=(x_val, y_val),shuffle=True) 
 
         print('strategy:',strategy,' on model:',self.__class__.__name__)
@@ -113,12 +113,14 @@ class BasicModel(object):
             q = representation_model(self.question)
             a = representation_model(self.answer)
             # q,a, q-a, q*a
-            reps = [q,a,keras.layers.Subtract()([q,a]),Multiply()([q,a])]
+            # reps = [q,a,keras.layers.Subtract()([q,a]),Multiply()([q,a])]
+            reps = [q,a]
             reps = Concatenate()(reps)
             output = Dense(self.opt.nb_classes, activation="softmax")(reps)
             
             model = Model([self.question,self.answer], output)
-            model.summary()
+            print('----model is:-------')
+            print('----pointwise-------')
             model.compile(loss = "categorical_hinge",  optimizer = getOptimizer(name=self.opt.optimizer,lr=self.opt.lr), metrics=["acc"])
             
         elif self.opt.match_type == 'pairwise':
