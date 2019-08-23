@@ -85,7 +85,7 @@ class MultiHeadAttention():
 			qs = Lambda(reshape1)(qs)
 			ks = Lambda(reshape1)(ks)
 			vs = Lambda(reshape1)(vs)
-
+            
 			if mask is not None:
 				mask = Lambda(lambda x:K.repeat_elements(x, n_head, 0))(mask)
 			head, attn = self.attention(qs, ks, vs, mask=mask)  
@@ -110,7 +110,7 @@ class MultiHeadAttention():
 
 		outputs = self.w_o(head)
 		outputs = Dropout(self.dropout)(outputs)
-		return outputs, attn
+		return Add()([q, k,v]), attn
 
 class PositionwiseFeedForward():
 	def __init__(self, d_hid, d_inner_hid, dropout=0.1):
@@ -135,6 +135,7 @@ class EncoderLayer():
 		output = self.norm_layer(Add()([enc_input, output]))
 		output = self.pos_ffn_layer(output)
 		return output, slf_attn
+       		   
 
 class PosEncodingLayer:
 	def __init__(self, max_len, d_emb):
@@ -184,14 +185,14 @@ class SelfAttention():
 		if return_att: atts = []
 		x = src_emb		
 		for enc_layer in self.layers[:active_layers]:
-			x, att = enc_layer(x, mask)
+			x, att = enc_layer(x,mask)
 			if return_att: atts.append(att)
 		return (x, atts) if return_att else x
     
 class Transformer(BasicModel):
 
     def get_model(self,opt) :   
-        active_layers=999
+
         pos_emb = PosEncodingLayer(opt.max_sequence_length, opt.embedding_dim)# if self.src_loc_info else None
         emb_dropout = Dropout(opt.dropout_rate)
 #        i_word_emb = Embedding(opt.max_sequence_length, d_emb)
@@ -201,12 +202,13 @@ class Transformer(BasicModel):
         src_seq = Input(shape=(opt.max_sequence_length,), dtype='int32')
         src_emb = i_word_emb(src_seq)
     
-        if True: 
+        if False: 
             src_emb = add_layer([src_emb, pos_emb(src_seq)])
     
         src_emb = emb_dropout(src_emb)
         mask = Lambda(lambda x:K.cast(K.greater(x, 0), 'float32'))(src_seq)
-        enc_output = encoder(src_emb, mask, active_layers=active_layers)
+#        mask = None
+        enc_output =   encoder(src_emb, mask, active_layers=opt.layers)
         meaner=Lambda(lambda x: K.mean(x, axis=-2) )
         mean_output= meaner(enc_output)
         preds = Dense(opt.nb_classes, activation='softmax')(mean_output)   # 3 catetory
