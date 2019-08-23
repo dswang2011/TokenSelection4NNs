@@ -11,8 +11,8 @@ from keras.layers import *
 from keras.callbacks import *
 from keras.initializers import *
 import tensorflow as tf
-add_layer = Lambda(lambda x:x[0]+x[1], output_shape=lambda x:x[0])
-
+add_layer = Lambda(lambda x:x[0]+x[1], output_shape=lambda x:x[0]) # actually equals to Add()
+import math
 
 
 class LayerNormalization(Layer):
@@ -34,8 +34,11 @@ class LayerNormalization(Layer):
 class ScaledDotProductAttention():
 	def __init__(self, attn_dropout=0.1):
 		self.dropout = Dropout(attn_dropout)
-	def __call__(self, q, k, v, mask):   # mask_k or mask_qk
-		temper = tf.sqrt(tf.cast(tf.shape(k)[-1], dtype='float32'))
+	def __call__(self, q, k, v, mask,dim=None):   # mask_k or mask_qk
+		if dim is None:
+			temper = tf.sqrt(tf.cast(tf.shape(k)[-1], dtype='float32'))
+		else:
+			temper = math.sqrt(dim)
 		attn = Lambda(lambda x:K.batch_dot(x[0],x[1],axes=[2,2])/temper)([q, k])  # shape=(batch, q, k)
 		if mask is not None:
 			mmask = Lambda(lambda x:(-1e+9)*(1.-K.cast(x, 'float32')))(mask)
@@ -56,6 +59,7 @@ class MultiHeadAttention():
 			self.qs_layer = Dense(n_head*d_k, use_bias=False)
 			self.ks_layer = Dense(n_head*d_k, use_bias=False)
 			self.vs_layer = Dense(n_head*d_v, use_bias=False)
+			self.w_o = Dense(d_model)           
 		elif mode == 1:
 			self.qs_layers = []
 			self.ks_layers = []
@@ -64,8 +68,9 @@ class MultiHeadAttention():
 				self.qs_layers.append(TimeDistributed(Dense(d_k, use_bias=False)))
 				self.ks_layers.append(TimeDistributed(Dense(d_k, use_bias=False)))
 				self.vs_layers.append(TimeDistributed(Dense(d_v, use_bias=False)))
+			self.w_o = TimeDistributed(Dense(d_model))           
 		self.attention = ScaledDotProductAttention()
-		self.w_o = TimeDistributed(Dense(d_model))
+#		self.w_o = TimeDistributed(Dense(d_model))
 
 	def __call__(self, q, k, v, mask=None):
 		d_k, d_v = self.d_k, self.d_v
@@ -75,20 +80,20 @@ class MultiHeadAttention():
 			qs = self.qs_layer(q)  # [batch_size, len_q, n_head*d_k]
 			ks = self.ks_layer(k)
 			vs = self.vs_layer(v)
-
+            
 			def reshape1(x):
 				s = tf.shape(x)   # [batch_size, len_q, n_head * d_k]
 				x = tf.reshape(x, [s[0], s[1], n_head, s[2]//n_head])
 				x = tf.transpose(x, [2, 0, 1, 3])  
 				x = tf.reshape(x, [-1, s[1], s[2]//n_head])  # [n_head * batch_size, len_q, d_k]
 				return x
-			qs = Lambda(reshape1)(qs)
-			ks = Lambda(reshape1)(ks)
-			vs = Lambda(reshape1)(vs)
-            
+#			qs = Lambda(reshape1)(qs)
+#			ks = Lambda(reshape1)(ks)
+#			vs = Lambda(reshape1)(vs)
+        
 			if mask is not None:
 				mask = Lambda(lambda x:K.repeat_elements(x, n_head, 0))(mask)
-			head, attn = self.attention(qs, ks, vs, mask=mask)  
+			head, attn = self.attention(qs, ks, vs, mask=None,dim =n_head*d_k )  
 				
 			def reshape2(x):
 				s = tf.shape(x)   # [n_head * batch_size, len_v, d_v]
@@ -96,21 +101,24 @@ class MultiHeadAttention():
 				x = tf.transpose(x, [1, 2, 0, 3])
 				x = tf.reshape(x, [-1, s[1], n_head*d_v])  # [batch_size, len_v, n_head * d_v]
 				return x
-			head = Lambda(reshape2)(head)
+#			head = Lambda(reshape2)(head)
 		elif self.mode == 1:
+			print("made it")        
 			heads = []; attns = []
 			for i in range(n_head):
 				qs = self.qs_layers[i](q)   
 				ks = self.ks_layers[i](k) 
 				vs = self.vs_layers[i](v) 
-				head, attn = self.attention(qs, ks, vs, mask)
+				head, attn = self.attention(qs, ks, vs, mask,dim =d_k)  
+                # waby: get dim parametter, in order to not direct use the input Variable  
+                # tensor in the functionself.attention()
 				heads.append(head); attns.append(attn)
 			head = Concatenate()(heads) if n_head > 1 else heads[0]
 			attn = Concatenate()(attns) if n_head > 1 else attns[0]
 
 		outputs = self.w_o(head)
 		outputs = Dropout(self.dropout)(outputs)
-		return Add()([q, k,v]), attn
+		return outputs, attn
 
 class PositionwiseFeedForward():
 	def __init__(self, d_hid, d_inner_hid, dropout=0.1):
@@ -202,7 +210,7 @@ class Transformer(BasicModel):
         src_seq = Input(shape=(opt.max_sequence_length,), dtype='int32')
         src_emb = i_word_emb(src_seq)
     
-        if False: 
+        if True: 
             src_emb = add_layer([src_emb, pos_emb(src_seq)])
     
         src_emb = emb_dropout(src_emb)
