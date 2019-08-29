@@ -113,8 +113,7 @@ class BasicModel(object):
             q = representation_model(self.question)
             a = representation_model(self.answer)
             # q,a, q-a, q*a
-            # reps = [q,a,keras.layers.Subtract()([q,a]),Multiply()([q,a])]
-            reps = [q,a]
+            reps = [q,a,keras.layers.Subtract()([q,a]),Multiply()([q,a])]
             reps = Concatenate()(reps)
             output = Dense(self.opt.nb_classes, activation="softmax")(reps)
             
